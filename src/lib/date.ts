@@ -96,3 +96,8 @@ export function formatHistoryDate(date: Date, timezone: string): string {
 export function formatShortDay(date: Date, timezone: string): string {
   return formatInTimeZone(date, timezone, "d MMM", { locale: es });
 }
+
+/** Clave de fecha de un instante en la zona del negocio. */
+export function dateKeyInZone(date: Date, timezone: string): string {
+  return formatInTimeZone(date, timezone, "yyyy-MM-dd");
+}

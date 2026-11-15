@@ -159,6 +159,61 @@ export function normalizePhone(value: string): string {
   return digits ? `+${digits}` : "";
 }
 
+const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+export function timeToMinutes(value: string): number {
+  const [hours, minutes] = value.split(":").map(Number);
+  return hours * 60 + minutes;
+}
+
+const dateKeyPattern = /^\d{4}-\d{2}-\d{2}$/;
+
+function isValidDateKeyInput(value: string): boolean {
+  if (!dateKeyPattern.test(value)) return false;
+  return !Number.isNaN(new Date(`${value}T00:00:00Z`).getTime());
+}
+
+/** Una franja del horario semanal de un profesional. */
+export const scheduleSchema = z
+  .object({
+    employeeId: z.string().trim().min(1, "Elegí un profesional."),
+    dayOfWeek: z
+      .string()
+      .regex(/^[1-7]$/, "Elegí un día de la semana.")
+      .transform(Number),
+    start: z.string().trim().regex(timePattern, "Usá un horario válido (HH:mm)."),
+    end: z.string().trim().regex(timePattern, "Usá un horario válido (HH:mm)."),
+  })
+  .refine((value) => timeToMinutes(value.end) > timeToMinutes(value.start), {
+    message: "El horario de fin debe ser posterior al de inicio.",
+    path: ["end"],
+  });
+
+/** Ausencia puntual o cierre; `employeeId` vacío = todo el negocio. */
+export const timeOffSchema = z
+  .object({
+    employeeId: z.string().trim(),
+    type: z.enum(["VACATION", "SICK", "PERSONAL", "TRAINING", "CLOSURE"]),
+    startDate: z
+      .string()
+      .trim()
+      .refine(isValidDateKeyInput, "Elegí una fecha de inicio válida."),
+    endDate: z
+      .string()
+      .trim()
+      .refine(isValidDateKeyInput, "Elegí una fecha de fin válida."),
+    reason: z.string().trim().max(300, "Máximo 300 caracteres."),
+  })
+  .refine((value) => value.endDate >= value.startDate, {
+    message: "La fecha de fin no puede ser anterior a la de inicio.",
+    path: ["endDate"],
+  });
+
+export type ScheduleInput = z.output<typeof scheduleSchema>;
+export type ScheduleFormValues = z.input<typeof scheduleSchema>;
+export type TimeOffInput = z.output<typeof timeOffSchema>;
+export type TimeOffFormValues = z.input<typeof timeOffSchema>;
+
 export type ServiceInput = z.output<typeof serviceSchema>;
 export type ServiceFormValues = z.input<typeof serviceSchema>;
 export type EmployeeInput = z.output<typeof employeeSchema>;
@@ -256,5 +311,24 @@ export function readCustomerForm(formData: FormData): CustomerFormValues {
     tags: text(formData, "tags"),
     marketingOptIn: checked(formData, "marketingOptIn"),
     isBlocked: checked(formData, "isBlocked"),
+  };
+}
+
+export function readScheduleForm(formData: FormData): ScheduleFormValues {
+  return {
+    employeeId: text(formData, "employeeId"),
+    dayOfWeek: text(formData, "dayOfWeek"),
+    start: text(formData, "start"),
+    end: text(formData, "end"),
+  };
+}
+
+export function readTimeOffForm(formData: FormData): TimeOffFormValues {
+  return {
+    employeeId: text(formData, "employeeId"),
+    type: text(formData, "type") as TimeOffFormValues["type"],
+    startDate: text(formData, "startDate"),
+    endDate: text(formData, "endDate"),
+    reason: text(formData, "reason"),
   };
 }

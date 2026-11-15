@@ -141,3 +141,60 @@ export type ServiceRow = Awaited<ReturnType<typeof listServices>>[number];
 export type EmployeeRow = Awaited<ReturnType<typeof listEmployees>>[number];
 export type CustomerRow = Awaited<ReturnType<typeof listCustomers>>[number];
 export type CustomerDetail = NonNullable<Awaited<ReturnType<typeof getCustomer>>>;
+
+/** Profesionales con su horario semanal, para la pantalla de horarios. */
+export async function listScheduleBoard(businessId: string) {
+  return prisma.employee.findMany({
+    where: { businessId, deletedAt: null },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      displayName: true,
+      color: true,
+      isActive: true,
+      isBookable: true,
+      sortOrder: true,
+      schedules: {
+        select: {
+          id: true,
+          dayOfWeek: true,
+          startMinute: true,
+          endMinute: true,
+        },
+        orderBy: [{ dayOfWeek: "asc" }, { startMinute: "asc" }],
+      },
+    },
+    orderBy: [{ sortOrder: "asc" }, { firstName: "asc" }],
+  });
+}
+
+/** Ausencias del negocio, de la más próxima/antigua a la más lejana. */
+export async function listTimeOff(businessId: string) {
+  return prisma.timeOff.findMany({
+    where: { businessId },
+    select: {
+      id: true,
+      type: true,
+      startsAt: true,
+      endsAt: true,
+      reason: true,
+      employee: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          displayName: true,
+          color: true,
+        },
+      },
+    },
+    orderBy: { startsAt: "asc" },
+    take: 100,
+  });
+}
+
+export type ScheduleEmployee = Awaited<
+  ReturnType<typeof listScheduleBoard>
+>[number];
+export type TimeOffRow = Awaited<ReturnType<typeof listTimeOff>>[number];
