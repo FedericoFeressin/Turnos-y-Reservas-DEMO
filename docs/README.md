@@ -1,7 +1,7 @@
 # Booking System — Documentación
 
 Plantilla comercializable de gestión de turnos y reservas.
-Estado actual: **Etapas 0, 1 y 2 (ronda L1) completas**. Etapa 2 pendiente de elección de concepto antes de avanzar a L2.
+Estado actual: **Etapas 0, 1 y 2 completas**. Ronda L1 con 5 conceptos y ronda L2 sobre **Papel**, que quedó como tema por defecto del producto. Pendiente de validación del cliente para cerrar la Etapa 2 y avanzar a la Etapa 3.
 
 Laboratorio visual: `pnpm dev` → <http://localhost:3000/lab>
 
@@ -11,7 +11,7 @@ Laboratorio visual: `pnpm dev` → <http://localhost:3000/lab>
 |---|---|
 | `pnpm typecheck` | ✅ sin errores |
 | `pnpm lint` | ✅ sin errores |
-| `pnpm build` | ✅ 39 rutas estáticas (35 del laboratorio, 5 temas) |
+| `pnpm build` | ✅ 39 rutas (38 estáticas + confirmación dinámica), 5 temas |
 | Contraste AA por tokens | ✅ 14 pares × 5 conceptos sin fallas |
 | Node | 24.22.3 (instalado en `~/.local/opt/node`) |
 | pnpm | 12.21.0 |
@@ -32,7 +32,7 @@ Laboratorio visual: `pnpm dev` → <http://localhost:3000/lab>
 |---|---|
 | [01 — Arquitectura y tecnologías](./01-arquitectura-y-tecnologias.md) | Evaluación de la propuesta, comparación de stack, arquitectura, multi-tenant vs instancia única, estructura de carpetas, MVP, roadmap |
 | [02 — Modelo de datos](./02-modelo-de-datos.md) | Esquema Prisma completo, restricciones SQL, índices, disponibilidad, estados, seed |
-| [03 — Sistema visual y experimentación](./03-experimentacion-visual.md) | 5 conceptos visuales con tokens, matriz de decisión, plan de la Etapa 2 y registro de ejecución de la ronda L1 |
+| [03 — Sistema visual y experimentación](./03-experimentacion-visual.md) | 5 conceptos visuales con tokens, matriz de decisión, plan de la Etapa 2 y registro de ejecución de las rondas L1 y L2 |
 
 ## Decisiones tomadas
 
@@ -53,7 +53,8 @@ Laboratorio visual: `pnpm dev` → <http://localhost:3000/lab>
 |---|---|
 | Modalidad comercial | **Híbrido**: código tenant-ready + una instancia y base por cliente |
 | Rubro piloto | **Barbería / peluquería** ("Estudio Norte") |
-| Etapa 2 | **5 conceptos en baja fidelidad (L1)** → 2 finalistas en L2 → 1 elegido |
+| Etapa 2 | **5 conceptos en L1** → ronda L2 sobre **Papel** (elegido para profundizar) → validación final |
+| Tema del producto | **Papel** como `:root`; Noche, Órbita, Brisa y Pulso quedan como presets |
 | Email de confirmación | Dentro del MVP, con patrón *outbox* y un canal simple |
 
 ## Requisitos de entorno

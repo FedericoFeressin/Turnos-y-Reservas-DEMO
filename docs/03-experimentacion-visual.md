@@ -400,3 +400,66 @@ Recorrido sugerido, en este orden: `/lab` (impresión de conjunto) → Home → 
 
 Solo dos conceptos, con: flujo de reserva de punta a punta con validación real, estados de error y vacío, responsive verificado, teclado completo y axe sin violaciones. Eso se hace **después** de que elijas los dos finalistas.
 
+---
+
+## 9. Registro de ejecución — Etapa 2, ronda L2 sobre «Papel»
+
+Estado: **construida y verificada, pendiente de validación**. La ronda se hizo solo sobre Papel, que además pasó a ser el tema por defecto del producto. Noche, Órbita, Brisa y Pulso quedan como presets en L1 a la espera de la decisión.
+
+### Por qué Papel y no dos finalistas
+
+El objetivo de la ronda era probar el flujo completo, no comparar estéticas otra vez. Profundizar un solo concepto permite llegar a una reserva realista sin duplicar el trabajo de dominio. Si la dirección visual no cierra, el flujo se conserva y se reemplaza la capa de tokens.
+
+Papel dejó de ser «un concepto del laboratorio» y pasó a ser la identidad base: `:root` y `[data-theme="papel"]` comparten bloque en `src/styles/themes/papel.css`. Cualquier ruta fuera de `/lab` nace con esta paleta, tipografía y escala de radios.
+
+### Qué se construyó
+
+| Pieza | Archivo | Qué resuelve |
+|---|---|---|
+| Dominio de disponibilidad | `src/lib/booking/schedule.ts` | Horarios del local, días libres por profesional, ocupación determinística, buffers, slots, grilla mensual, ventana de reserva |
+| Validación compartida | `src/lib/booking/schema.ts` | Zod para el formulario de datos y para los parámetros de la confirmación |
+| Wizard de 4 pasos | `src/components/booking/wizard/*` | Servicio → profesional → fecha y hora → datos, con resumen lateral y validación inline |
+| Confirmación | `src/components/booking/confirmation-card.tsx` | Recibo, código, calendario de Google y cancelación con estado local |
+| Vista de reserva y confirmación | `src/components/views/booking-views.tsx` | Composición de las dos rutas del laboratorio |
+
+Reglas de la demo, alineadas con `docs/02`:
+
+- Grilla de 15 minutos; el turno ocupa `duración + buffer`.
+- Anticipación mínima de 2 horas y horizonte de 60 días.
+- Cancelación sin costo hasta 24 horas antes.
+- Profesional «el primero disponible»: solo se muestran horarios realmente libres para alguno del equipo, para no prometer un turno que después no se puede asignar.
+- Profesional elegido: se muestran también los ocupados, tachados y no accionables.
+- Calendario con día cerrado, día sin lugar y feriado diferenciados por texto y forma, no solo por color.
+- Estados simulables para revisar errores: turno tomado por otro cliente y falla de red al confirmar. Ambos se activan desde «Opciones de demo» en el último paso.
+
+Ficción temporal de la demo: **lunes 16 de noviembre de 2026, 09:20**. El feriado del 23/11 cierra el local y el 27/11 está saturado a propósito para poder ver el estado vacío. Es una affordance del laboratorio, documentada en el módulo, no una regla de negocio.
+
+### Accesibilidad y responsive de esta ronda
+
+- Skip link a `#contenido` en el sitio público y en el panel.
+- Menú móvil con `aria-expanded`, `aria-controls`, cierre con Escape y foco devuelto al disparador.
+- Wizard con `aria-current="step"`, anuncio del paso por `aria-live`, foco al título en cada transición y errores asociados con `aria-describedby`.
+- Radios y checkboxes reales dentro de `label`, con estado visible por `:checked` y foco por `:focus-visible`.
+- Panel admin alineado a la misma semana de la demo para que las fechas no se contradigan entre pantallas.
+- Un solo `h1` por página; el resumen de reserva no compite con el formulario.
+
+### Verificación ejecutada
+
+| Comprobación | Resultado |
+|---|---|
+| `pnpm typecheck` | ✅ |
+| `pnpm lint` | ✅ |
+| `pnpm build` | ✅ 39 rutas; `/lab/[concept]/confirmacion` queda dinámica |
+| Navegación completa del wizard | ✅ en dev server, con y sin profesional elegido |
+| Estados de error y vacío | ✅ conflicto, red, día saturado y feriado |
+| 375 px / 1440 px | ⏳ revisión visual del cliente |
+| axe / lector de pantalla | ⏳ pendiente; no hay navegador headless funcional en este entorno |
+
+### Qué queda para la Etapa 3
+
+- Persistir la reserva: Server Action + validación Zod en servidor + `EXCLUDE USING gist` para el anti-solapamiento.
+- Reemplazar el reloj de demo por `now()` y la zona horaria del negocio.
+- Reemplazar la ocupación determinística por consultas a `appointments`.
+- Llevar la cancelación de estado local a una mutación real con token de gestión.
+- Aplicar el mismo flujo a un segundo concepto si la decisión visual lo pide; el wizard ya es token-driven.
+
