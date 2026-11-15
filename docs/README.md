@@ -1,7 +1,7 @@
 # Booking System — Documentación
 
 Plantilla comercializable de gestión de turnos y reservas.
-Estado actual: **Etapas 0, 1 y 2 completas**; **Etapa 3 en curso** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña), un **panel con la agenda real** de PostgreSQL (solo lectura) y el **CRUD de servicios, equipo y clientes**. Falta configuración y conectar el flujo público de reserva a la base.
+Estado actual: **Etapas 0, 1 y 2 completas**; **Etapa 3 en curso** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña), un **panel con la agenda real** de PostgreSQL (solo lectura) y el **CRUD de servicios, equipo y clientes**, más **horarios y ausencias**. Falta configuración y conectar el flujo público de reserva a la base.
 
 Laboratorio visual: `pnpm dev` → <http://localhost:3000/lab>
 Panel protegido: `pnpm dev` → <http://localhost:3000/admin> (redirige a `/ingresar`)
@@ -19,6 +19,7 @@ Panel protegido: `pnpm dev` → <http://localhost:3000/admin> (redirige a `/ingr
 | Panel | ✅ agenda del día desde PostgreSQL, KPIs, navegación por fecha, estados vacío/cerrado/feriado |
 | Catálogo | ✅ alta, edición y activación de servicios y profesionales, con permisos por rol |
 | Clientes | ✅ alta, edición, búsqueda e historial de turnos con KPIs |
+| Disponibilidad | ✅ horario semanal por profesional (franjas múltiples) y ausencias/cierres |
 | Contraste AA por tokens | ✅ 14 pares × 5 conceptos sin fallas |
 | Node | 24.22.3 (instalado en `~/.local/opt/node`) |
 | pnpm | 12.21.0 |
@@ -281,6 +282,31 @@ Reglas:
 8. **Permisos y PRG.** Mismas reglas que el catálogo: `OWNER`/`ADMIN` escriben con `requireManager`; el alta redirige a la ficha (`?ok=creado`) y la edición al listado (`?ok=actualizado`).
 
 Pendiente en esta sección: baja lógica, fusión de duplicados históricos y vínculo con el flujo público de reserva.
+
+## Horarios y ausencias
+
+| Ruta | Contenido |
+|---|---|
+| `/admin/horarios` | Horario semanal por profesional + ausencias y cierres |
+
+| Pieza | Archivo |
+|---|---|
+| Esquemas `scheduleSchema` y `timeOffSchema` | `src/lib/admin/schemas.ts` |
+| Consultas `listScheduleBoard` y `listTimeOff` | `src/lib/admin/queries.ts` |
+| Server Actions | `src/app/admin/horarios/actions.ts` |
+| Pantalla | `src/app/admin/horarios/page.tsx` |
+
+Reglas:
+
+1. **Franjas múltiples.** Un día puede tener varias franjas (por ejemplo 09:00–13:00 y 15:00–20:00). Se agregan y quitan de a una, con acciones atómicas.
+2. **Validación.** El fin debe ser posterior al inicio y la franja no puede superponerse con otra del mismo profesional y día. La comparación se hace en minutos desde medianoche.
+3. **Zona horaria.** Los minutos se interpretan en la zona del negocio (`business.timezone`), igual que la agenda. El horario es semanal y se repite.
+4. **Ausencias.** Tienen tipo (`VACATION`, `SICK`, `PERSONAL`, `TRAINING`, `CLOSURE`), rango de fechas inclusive y alcance: un profesional o todo el negocio (`employeeId = null`).
+5. **Días completos.** Una ausencia bloquea desde el inicio del primer día hasta el inicio del día siguiente al último, calculado con `dayBounds` en la zona del negocio.
+6. **Turnos existentes.** Cambiar horarios o cargar ausencias **no mueve ni cancela turnos ya agendados**. La pantalla lo advierte; el reencaje llega con el motor de reservas.
+7. **Permisos.** `OWNER`/`ADMIN` editan con `requireManager`; `STAFF` ve la pantalla en modo solo lectura, sin formularios ni botones de borrado.
+
+Pendiente en esta sección: excepciones por fecha, horarios del negocio (hoy fijos en `BusinessSchedule`), validación contra la agenda y detección de turnos afectados.
 
 ## Convención de commits
 
