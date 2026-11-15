@@ -1,7 +1,7 @@
 # Booking System — Documentación
 
 Plantilla comercializable de gestión de turnos y reservas.
-Estado actual: **Etapas 0, 1 y 2 completas**; **Etapa 3 en curso** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña) y un **panel con la agenda real** de PostgreSQL (solo lectura). Falta el CRUD de servicios/equipo y conectar el flujo público de reserva a la base.
+Estado actual: **Etapas 0, 1 y 2 completas**; **Etapa 3 en curso** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña), un **panel con la agenda real** de PostgreSQL (solo lectura) y el **CRUD de servicios y equipo**. Falta clientes, configuración y conectar el flujo público de reserva a la base.
 
 Laboratorio visual: `pnpm dev` → <http://localhost:3000/lab>
 Panel protegido: `pnpm dev` → <http://localhost:3000/admin> (redirige a `/ingresar`)
@@ -12,11 +12,12 @@ Panel protegido: `pnpm dev` → <http://localhost:3000/admin> (redirige a `/ingr
 |---|---|
 | `pnpm typecheck` | ✅ sin errores |
 | `pnpm lint` | ✅ sin errores |
-| `pnpm build` | ✅ 41 rutas (38 estáticas + panel, ingreso y API de auth dinámicos), 5 temas |
+| `pnpm build` | ✅ build limpio (laboratorio con 5 temas + panel, ingreso y API de auth) |
 | `pnpm db:seed` | ✅ 23 turnos, 6 servicios, 3 profesionales, 17 clientes, cuenta de acceso |
 | Anti-solapamiento | ✅ `EXCLUDE USING gist` rechaza turnos solapados del mismo profesional |
 | Autenticación | ✅ login, guard de `/admin`, sesión y logout |
 | Panel | ✅ agenda del día desde PostgreSQL, KPIs, navegación por fecha, estados vacío/cerrado/feriado |
+| Catálogo | ✅ alta, edición y activación de servicios y profesionales, con permisos por rol |
 | Contraste AA por tokens | ✅ 14 pares × 5 conceptos sin fallas |
 | Node | 24.22.3 (instalado en `~/.local/opt/node`) |
 | pnpm | 12.21.0 |
@@ -189,7 +190,7 @@ Cómo funciona:
 3. `/admin` valida la sesión con `auth.api.getSession` contra la base y busca la membresía activa del usuario. Sin sesión redirige; sin negocio muestra un estado vacío.
 4. El logout es una Server Action que llama `auth.api.signOut` y vuelve a `/ingresar`.
 
-No hay registro público: los usuarios se crean desde el seed o, más adelante, desde la invitación del panel de equipo.
+No hay registro público: `emailAndPassword.disableSignUp` cierra el endpoint `/api/auth/sign-up/*` (no solo se oculta el formulario). Los usuarios se crean desde el seed o, más adelante, desde la invitación del panel de equipo.
 
 ### Acceso de demo
 
@@ -223,6 +224,34 @@ Comportamiento:
 6. La navegación permite ir al día anterior, al siguiente y volver a hoy.
 
 Todavía no hay escrituras: crear, confirmar o cancelar turnos llega con el CRUD y el motor de reservas.
+
+## Catálogo: servicios y equipo
+
+| Ruta | Contenido |
+|---|---|
+| `/admin/servicios` | Listado del catálogo + alta/edición en línea |
+| `/admin/equipo` | Profesionales + servicios asignados |
+
+| Pieza | Archivo |
+|---|---|
+| Esquemas Zod y lectura de `FormData` | `src/lib/admin/schemas.ts` |
+| Consultas del panel | `src/lib/admin/queries.ts` |
+| Permisos (`canManage`, `requireManager`) | `src/lib/admin/guard.ts` |
+| Formularios cliente | `src/app/admin/{servicios,equipo}/*-form.tsx` |
+| Server Actions | `src/app/admin/{servicios,equipo}/actions.ts` |
+| Controles de formulario | `src/components/ui/field.tsx` |
+
+Reglas:
+
+1. **Permisos.** `OWNER` y `ADMIN` pueden escribir; `STAFF` solo lee. La UI oculta los controles y los Server Actions vuelven a validar con `requireManager` (ocultar un botón no es autorización). Un intento de escritura de `STAFF` redirige a `/admin?error=permiso`.
+2. **Validación compartida.** Los formularios y las acciones usan el mismo esquema Zod. Los campos numéricos se validan como texto y se transforman, así un campo vacío no se convierte en `0`.
+3. **Precio.** Se carga en pesos y se guarda en centavos (`priceCents`) para evitar decimales flotantes.
+4. **Slug.** Se genera del nombre al crear y se mantiene estable al editar; si colisiona dentro del negocio se agrega `-2`, `-3`…
+5. **Borrado lógico.** Desactivar un servicio o profesional cambia `isActive`; no se borra, porque los turnos históricos lo referencian. La lista muestra los inactivos atenuados.
+6. **Servicios del profesional.** La asignación se sincroniza en una transacción: se borran los vínculos anteriores y se crean los nuevos. Los ids se validan contra el `businessId` para que un id manipulado no cruce tenants.
+7. **Acciones con PRG.** Las acciones exitosas redirigen con `?ok=creado|actualizado`, evitando reenvíos al refrescar.
+
+Pendiente en esta sección: horarios de atención por profesional, ausencias y borrado definitivo.
 
 ## Convención de commits
 
