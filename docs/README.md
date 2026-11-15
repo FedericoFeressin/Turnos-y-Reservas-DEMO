@@ -1,9 +1,10 @@
 # Booking System — Documentación
 
 Plantilla comercializable de gestión de turnos y reservas.
-Estado actual: **Etapas 0, 1 y 2 completas**; **Etapa 3 en curso** con PostgreSQL 18.7 y Prisma 7 configurados, el modelo de dominio migrado y un seed funcional. Falta autenticación (Better Auth) y conectar la UI a la base.
+Estado actual: **Etapas 0, 1 y 2 completas**; **Etapa 3 en curso** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional y **autenticación operativa** (Better Auth con email y contraseña). Falta conectar el panel y el flujo de reserva a la base.
 
 Laboratorio visual: `pnpm dev` → <http://localhost:3000/lab>
+Panel protegido: `pnpm dev` → <http://localhost:3000/admin> (redirige a `/ingresar`)
 
 ## Estado verificado
 
@@ -11,15 +12,17 @@ Laboratorio visual: `pnpm dev` → <http://localhost:3000/lab>
 |---|---|
 | `pnpm typecheck` | ✅ sin errores |
 | `pnpm lint` | ✅ sin errores |
-| `pnpm build` | ✅ 39 rutas (38 estáticas + confirmación dinámica), 5 temas |
-| `pnpm db:seed` | ✅ 23 turnos, 6 servicios, 3 profesionales, 17 clientes |
+| `pnpm build` | ✅ 41 rutas (38 estáticas + panel, ingreso y API de auth dinámicos), 5 temas |
+| `pnpm db:seed` | ✅ 23 turnos, 6 servicios, 3 profesionales, 17 clientes, cuenta de acceso |
 | Anti-solapamiento | ✅ `EXCLUDE USING gist` rechaza turnos solapados del mismo profesional |
+| Autenticación | ✅ login, guard de `/admin`, sesión y logout |
 | Contraste AA por tokens | ✅ 14 pares × 5 conceptos sin fallas |
 | Node | 24.22.3 (instalado en `~/.local/opt/node`) |
 | pnpm | 12.21.0 |
 | PostgreSQL | 18.7 (instalado en `~/.local/opt/pgsql`, sin `sudo`) |
 | Next.js | 16.4.6 |
 | Prisma | 7.10.1 (`prisma-client` + adapter `pg`) |
+| Better Auth | 1.7.25 (+ `@better-auth/prisma-adapter`) |
 | Tailwind CSS | 4.3.5 |
 | TypeScript | 6.0.3 (fijado: `typescript-eslint` aún no soporta TS 7) |
 
@@ -141,6 +144,12 @@ cp .env.example .env.local
 # editar DATABASE_URL
 ```
 
+`BETTER_AUTH_SECRET` es obligatorio (mínimo 32 caracteres); se genera con:
+
+```bash
+openssl rand -base64 32
+```
+
 `.env.local` está ignorado por git.
 
 ### Seed
@@ -150,12 +159,44 @@ cp .env.example .env.local
 - Arranca en el lunes de la semana actual; si se corre un domingo, usa la semana siguiente.
 - 6 servicios, 3 profesionales (Sofía no trabaja los miércoles), 17 clientes, 23 turnos y un feriado.
 - Owner de prueba: `tomas@estudionorte.com.ar` (`usr_tomas`), con membresía `OWNER`.
+- Cuenta de acceso del owner con contraseña `estudio-norte` (override con `SEED_OWNER_PASSWORD`).
 - Es idempotente: borra y recrea catálogo, agenda y clientes de ese negocio, sin tocar otros negocios ni usuarios.
 - Los turnos ya pasados quedan `COMPLETED`, salvo los marcados `CANCELLED` o `NO_SHOW`.
 
 ### Integridad de los turnos
 
 El anti-solapamiento no depende de la aplicación: la migración inicial agrega `btree_gist` y una restricción de exclusión en `appointments` que impide dos turnos activos (`PENDING`/`CONFIRMED`) del mismo profesional cuyos rangos `[starts_at, blocked_until)` se superpongan. También hay `CHECK` de coherencia temporal y de rangos en horarios y servicios (ver `docs/02-modelo-de-datos.md` §5).
+
+## Autenticación
+
+Better Auth 1.7 con email y contraseña, adaptador de Prisma y sesiones en base.
+
+| Pieza | Archivo |
+|---|---|
+| Instancia del servidor | `src/lib/auth.ts` |
+| Cliente React | `src/lib/auth-client.ts` |
+| Route handler `/api/auth/*` | `src/app/api/auth/[...all]/route.ts` |
+| Guard optimista | `src/proxy.ts` |
+| Ingreso | `src/app/ingresar/{page,login-form,actions}.tsx` |
+| Panel protegido | `src/app/admin/{page,actions}.tsx` |
+| Cliente Prisma singleton | `src/lib/prisma.ts` |
+
+Cómo funciona:
+
+1. `src/proxy.ts` (el `middleware` de Next 16) revisa que exista la cookie de sesión para `/admin/*`. Si no está, redirige a `/ingresar?next=…`. Es un chequeo **optimista**, no una validación.
+2. `/ingresar` valida con Zod y llama `auth.api.signInEmail` desde una Server Action. El plugin `nextCookies` escribe la cookie.
+3. `/admin` valida la sesión con `auth.api.getSession` contra la base y busca la membresía activa del usuario. Sin sesión redirige; sin negocio muestra un estado vacío.
+4. El logout es una Server Action que llama `auth.api.signOut` y vuelve a `/ingresar`.
+
+No hay registro público: los usuarios se crean desde el seed o, más adelante, desde la invitación del panel de equipo.
+
+### Acceso de demo
+
+- URL: <http://localhost:3000/admin>
+- Email: `tomas@estudionorte.com.ar`
+- Contraseña: `estudio-norte`
+
+Solo para desarrollo local. En producción se cambia al aprovisionar la instancia.
 
 ## Convención de commits
 
