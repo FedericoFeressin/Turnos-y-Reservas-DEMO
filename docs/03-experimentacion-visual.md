@@ -330,3 +330,73 @@ Para que la decisión no sea solo "me gusta":
 1. **Rubro piloto** para el contenido de la demo (mi supuesto: barbería).
 2. **Dos referencias visuales** que te gusten y **una que no** (links, capturas o nombres de marcas). Esto ahorra una ronda entera.
 3. **Confirmación del orden:** ¿5 conceptos en L1 y después profundizar 2, o preferís 3 conceptos ya en L2 desde el inicio? (La primera opción muestra más diversidad; la segunda, más profundidad por concepto.)
+
+---
+
+## 8. Registro de ejecución — Etapa 2, ronda L1
+
+Estado: **construida, verificada y pendiente de elección**. Los tres gates de esta etapa siguen abiertos hasta que haya decisión.
+
+### Qué se construyó
+
+Una sola implementación de cada pantalla; el concepto entra por `data-theme` y por dos variantes estructurales (`layout.hero`, `layout.slots`) declaradas en `src/lib/concepts.ts`.
+
+| Ruta | Pantalla | Archivo de vista |
+|---|---|---|
+| `/` | Estado del proyecto | `src/app/page.tsx` |
+| `/lab` | Comparador de los 5 conceptos | `src/app/lab/page.tsx` |
+| `/lab/[concept]` | Home pública | `views/site-views.tsx` → `HomeView` |
+| `/lab/[concept]/servicios` | Carta de servicios | `ServicesView` |
+| `/lab/[concept]/equipo` | Equipo | `TeamView` |
+| `/lab/[concept]/reservar` | Reserva: fecha y hora | `views/booking-views.tsx` |
+| `/lab/[concept]/confirmacion` | Confirmación | `ConfirmationView` |
+| `/lab/[concept]/admin` | Panel: dashboard | `views/admin-views.tsx` |
+| `/lab/[concept]/admin/calendario` | Panel: agenda semanal | `AdminCalendarView` |
+
+`[concept]` ∈ `papel | noche | orbita | brisa | pulso`. Son 35 páginas estáticas del laboratorio; el build completo genera 39.
+
+### Desvíos respecto del plan de la §4, y por qué
+
+| Planificado | Implementado | Motivo |
+|---|---|---|
+| `ThemeProvider` + `?theme=` + `localStorage` | Concepto en la ruta (`/lab/[concept]`) | La URL es compartible y no hay estado global que hidratar; el provider se agrega en la Etapa 3 cuando exista `BusinessTheme` en base. |
+| Barra de desarrollo solo en development | `LabBar` visible también en producción | Permite previsualizar con `pnpm build && pnpm start` sin dos modos distintos. `/lab` sigue siendo `noindex`. |
+| `/lab` excluida del build | Incluida, con `robots: noindex, nofollow` | Se necesita revisar el resultado compilado antes del gate. Se excluye en la Etapa 3. |
+| Contador del test de 5 segundos | No implementado | Se resuelve con un cronómetro externo; no cambia la decisión. |
+
+### Verificación ejecutada
+
+| Comprobación | Resultado |
+|---|---|
+| `pnpm typecheck` | ✅ |
+| `pnpm lint` | ✅ |
+| `pnpm build` | ✅ 39 rutas estáticas, 5 temas compilados |
+| Contraste WCAG AA por tokens | ✅ 14 pares × 5 conceptos; se corrigieron 6 tokens que fallaban |
+| 375 px / teclado / axe | ⏳ pendiente de la ronda L2 |
+
+Correcciones de contraste aplicadas (texto normal, umbral 4.5:1):
+
+| Concepto | Token | Antes | Después | Fallaba en |
+|---|---|---|---|---|
+| Papel | `accent` | `#b8763f` (3.47) | `#9a5a27` (5.45) | texto de acento sobre fondo |
+| Noche | `accent` | `#7a6a4a` (3.76) | `#a08a63` (5.95) | texto de acento sobre fondo |
+| Noche | `accent-fg` | `#f4f1ea` (2.95) | `#0a0a0b` (5.95) | etiqueta sobre acento |
+| Brisa | `ink-muted` | `#78716c` (4.24) | `#6b645f` (5.13) | texto secundario sobre `surface-2` |
+| Pulso | `accent` | `#0d9488` (3.56) | `#0f766e` (5.21) | texto de acento sobre fondo |
+| Órbita / Pulso | `line` | 1.17 / 1.19 | 1.27 / 1.28 | definición de bordes |
+
+El botón del bloque de reserva sobre fondo primario pasó de `accent` a `dark`: en Noche el acento es un bronce claro y el texto claro encima no alcanzaba AA.
+
+### Cómo revisarlo
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+pnpm dev            # http://localhost:3000/lab
+```
+
+Recorrido sugerido, en este orden: `/lab` (impresión de conjunto) → Home → Servicios → Equipo → Reserva → Confirmación → Panel → Calendario. Después repetir con la ventana a 375 px.
+
+### Qué queda para la ronda L2
+
+Solo dos conceptos, con: flujo de reserva de punta a punta con validación real, estados de error y vacío, responsive verificado, teclado completo y axe sin violaciones. Eso se hace **después** de que elijas los dos finalistas.
+

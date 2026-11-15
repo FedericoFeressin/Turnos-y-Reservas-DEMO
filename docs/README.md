@@ -1,7 +1,9 @@
 # Booking System — Documentación
 
 Plantilla comercializable de gestión de turnos y reservas.
-Estado actual: **Etapa 0 y 1 completas**. Etapa 2 (laboratorio visual) por comenzar.
+Estado actual: **Etapas 0, 1 y 2 (ronda L1) completas**. Etapa 2 pendiente de elección de concepto antes de avanzar a L2.
+
+Laboratorio visual: `pnpm dev` → <http://localhost:3000/lab>
 
 ## Estado verificado
 
@@ -9,7 +11,8 @@ Estado actual: **Etapa 0 y 1 completas**. Etapa 2 (laboratorio visual) por comen
 |---|---|
 | `pnpm typecheck` | ✅ sin errores |
 | `pnpm lint` | ✅ sin errores |
-| `pnpm build` | ✅ 3 rutas estáticas |
+| `pnpm build` | ✅ 39 rutas estáticas (35 del laboratorio, 5 temas) |
+| Contraste AA por tokens | ✅ 14 pares × 5 conceptos sin fallas |
 | Node | 24.22.3 (instalado en `~/.local/opt/node`) |
 | pnpm | 12.21.0 |
 | Next.js | 16.4.6 |
@@ -29,7 +32,7 @@ Estado actual: **Etapa 0 y 1 completas**. Etapa 2 (laboratorio visual) por comen
 |---|---|
 | [01 — Arquitectura y tecnologías](./01-arquitectura-y-tecnologias.md) | Evaluación de la propuesta, comparación de stack, arquitectura, multi-tenant vs instancia única, estructura de carpetas, MVP, roadmap |
 | [02 — Modelo de datos](./02-modelo-de-datos.md) | Esquema Prisma completo, restricciones SQL, índices, disponibilidad, estados, seed |
-| [03 — Sistema visual y experimentación](./03-experimentacion-visual.md) | 6 conceptos visuales con tokens, matriz de decisión, plan de la Etapa 2 |
+| [03 — Sistema visual y experimentación](./03-experimentacion-visual.md) | 5 conceptos visuales con tokens, matriz de decisión, plan de la Etapa 2 y registro de ejecución de la ronda L1 |
 
 ## Decisiones tomadas
 
