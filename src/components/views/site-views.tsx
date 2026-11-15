@@ -149,7 +149,7 @@ export function HomeView({ concept }: { concept: Concept }) {
     <>
       <SiteHeader concept={concept} />
 
-      <main>
+      <main id="contenido">
         <Hero concept={concept} />
         <TrustStrip concept={concept} />
 
@@ -240,7 +240,7 @@ export function ServicesView({ concept }: { concept: Concept }) {
     <>
       <SiteHeader concept={concept} />
 
-      <main>
+      <main id="contenido">
         <Section className="pb-6 sm:pb-10">
           <div className="max-w-2xl">
             <Badge tone="outline">Carta de servicios</Badge>
@@ -321,7 +321,7 @@ export function TeamView({ concept }: { concept: Concept }) {
     <>
       <SiteHeader concept={concept} />
 
-      <main>
+      <main id="contenido">
         <Section className="pb-6 sm:pb-10">
           <div className="max-w-2xl">
             <Badge tone="outline">El equipo</Badge>

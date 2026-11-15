@@ -50,6 +50,13 @@ export function AdminShell({
 
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[248px_1fr]">
+      <a
+        href="#contenido"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-ink focus:px-4 focus:py-2 focus:text-[13px] focus:text-background"
+      >
+        Saltar al contenido
+      </a>
+
       <aside className="hidden border-r border-line bg-surface lg:flex lg:flex-col">
         <div className="flex h-16 items-center gap-2 border-b border-line px-5">
           <span className="grid size-7 place-items-center rounded-md bg-primary text-[11px] font-bold text-primary-fg">
@@ -136,7 +143,7 @@ export function AdminShell({
           </div>
         </header>
 
-        <main className="px-4 py-6 sm:px-6 sm:py-8">
+        <main id="contenido" className="px-4 py-6 sm:px-6 sm:py-8">
           <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
             <div>
               <h1 className="font-display text-2xl leading-tight font-semibold tracking-[var(--theme-tracking-display)]">

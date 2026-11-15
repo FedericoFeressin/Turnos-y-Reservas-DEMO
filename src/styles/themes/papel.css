@@ -1,4 +1,11 @@
-/* Concepto 1 — Papel · Minimalista editorial */
+/*
+ * Concepto 1 — Papel · Minimalista editorial
+ *
+ * Es el tema por defecto del producto: `:root` y `[data-theme="papel"]`
+ * comparten bloque, así las rutas fuera del laboratorio ya nacen con esta
+ * identidad y los otros cuatro conceptos quedan como presets.
+ */
+:root,
 [data-theme="papel"] {
   --theme-font-display: var(--font-instrument-serif), Georgia, "Times New Roman", serif;
   --theme-font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
@@ -17,6 +24,7 @@
   --theme-success: #2f6b4f;
   --theme-warning: #8a5f14;
   --theme-danger: #a63a2e;
+  --theme-danger-fg: #ffffff;
 
   --theme-radius-sm: 2px;
   --theme-radius-md: 4px;
@@ -26,7 +34,8 @@
   --theme-shadow-card: 0 0 0 0 transparent;
   --theme-shadow-raised: 0 18px 40px -24px rgb(20 20 15 / 0.25);
 
-  --theme-section-y: 7rem;
+  /* El aire es parte del concepto, pero no puede comerse la pantalla móvil. */
+  --theme-section-y: clamp(3.25rem, 8vw, 7rem);
   --theme-tracking-display: -0.025em;
 }
 

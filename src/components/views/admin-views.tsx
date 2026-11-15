@@ -45,8 +45,8 @@ export function AdminDashboardView({ concept }: { concept: Concept }) {
     <AdminShell
       concept={concept}
       active="dashboard"
-      title="Jueves 13 de noviembre"
-      description={`${todayAppointments.length} turnos agendados · 3 pendientes de confirmar`}
+      title="Lunes 16 de noviembre"
+      description="14 turnos agendados · 3 pendientes de confirmar"
       action={
         <div className="flex items-center gap-2">
           <button
@@ -98,7 +98,7 @@ export function AdminDashboardView({ concept }: { concept: Concept }) {
       <div className="mt-4 grid gap-4 xl:grid-cols-[1fr_320px]">
         <section className="overflow-hidden rounded-lg border border-line bg-surface shadow-card">
           <div className="flex items-center justify-between border-b border-line px-4 py-3">
-            <h2 className="text-[13px] font-semibold">Turnos de hoy</h2>
+            <h2 className="text-[13px] font-semibold">Próximos turnos</h2>
             <span className="text-[11px] text-ink-muted">Ver todos</span>
           </div>
 
@@ -122,7 +122,7 @@ export function AdminDashboardView({ concept }: { concept: Concept }) {
                       key={`${appointment.time}-${appointment.customer}`}
                       className={cn(
                         "border-b border-line/70 text-[12.5px] last:border-0",
-                        index < 2 && "text-ink-muted",
+                        index < 1 && "text-ink-muted",
                       )}
                     >
                       <td className="px-4 py-2.5 font-mono text-[11.5px]">
@@ -176,7 +176,7 @@ export function AdminDashboardView({ concept }: { concept: Concept }) {
               {[
                 { label: "Confirmados", value: 9, tone: "bg-success" },
                 { label: "Pendientes", value: 3, tone: "bg-warning" },
-                { label: "Completados", value: 2, tone: "bg-ink/40" },
+                { label: "Completados", value: 1, tone: "bg-ink/40" },
                 { label: "Cancelados", value: 1, tone: "bg-danger" },
               ].map((row) => (
                 <li key={row.label} className="flex items-center gap-2 text-[12px]">
@@ -188,7 +188,7 @@ export function AdminDashboardView({ concept }: { concept: Concept }) {
             </ul>
             <p className="mt-4 flex items-start gap-1.5 rounded-md bg-surface-2 p-2.5 text-[11px] leading-relaxed text-ink-muted">
               <Clock className="mt-0.5 size-3 shrink-0" />
-              Próximo turno en 25 minutos: Ignacio Sosa, perfilado de barba.
+              Próximo turno en 10 minutos: Lucas Ferreyra, corte + barba.
             </p>
           </section>
         </div>
@@ -205,7 +205,7 @@ export function AdminCalendarView({ concept }: { concept: Concept }) {
       concept={concept}
       active="turnos"
       title="Agenda"
-      description="Semana del 10 al 15 de noviembre · 6 días · 3 profesionales"
+      description="Semana del 16 al 21 de noviembre · 6 días · 3 profesionales"
       action={
         <div className="flex items-center gap-2">
           <div className="flex h-9 items-center rounded-md border border-line text-[12px]">
@@ -234,7 +234,7 @@ export function AdminCalendarView({ concept }: { concept: Concept }) {
             <div className="flex border-b border-line">
               <div className="w-16 shrink-0" />
               {weekColumns.map((day, index) => {
-                const isToday = index === 2;
+                const isToday = index === 0;
                 return (
                   <div
                     key={day}

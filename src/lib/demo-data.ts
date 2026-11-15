@@ -22,6 +22,8 @@ export type DemoService = {
   name: string;
   description: string;
   duration: number;
+  /** Minutos de limpieza/preparación que también quedan bloqueados. */
+  buffer: number;
   price: number;
   icon: "scissors" | "razor" | "sparkles" | "palette" | "baby" | "droplet";
   popular?: boolean;
@@ -33,6 +35,7 @@ export const services: DemoService[] = [
     name: "Corte clásico",
     description: "Tijera y máquina, lavado y peinado. La base de todo.",
     duration: 30,
+    buffer: 5,
     price: 9000,
     icon: "scissors",
     popular: true,
@@ -42,6 +45,7 @@ export const services: DemoService[] = [
     name: "Corte + barba",
     description: "El combo completo, con toalla caliente y navaja.",
     duration: 50,
+    buffer: 10,
     price: 14000,
     icon: "razor",
     popular: true,
@@ -51,6 +55,7 @@ export const services: DemoService[] = [
     name: "Perfilado de barba",
     description: "Contorno, textura y aceite para terminar.",
     duration: 20,
+    buffer: 5,
     price: 6500,
     icon: "razor",
   },
@@ -59,6 +64,7 @@ export const services: DemoService[] = [
     name: "Color",
     description: "Cobertura de canas o cambio de tono. Incluye diagnóstico.",
     duration: 90,
+    buffer: 15,
     price: 26000,
     icon: "palette",
   },
@@ -67,6 +73,7 @@ export const services: DemoService[] = [
     name: "Corte para niños",
     description: "Hasta 12 años. Paciencia incluida, sin cargo.",
     duration: 25,
+    buffer: 5,
     price: 7000,
     icon: "baby",
   },
@@ -75,6 +82,7 @@ export const services: DemoService[] = [
     name: "Tratamiento capilar",
     description: "Hidratación profunda con masaje de cuero cabelludo.",
     duration: 40,
+    buffer: 10,
     price: 12000,
     icon: "droplet",
   },
@@ -85,6 +93,8 @@ export type DemoStaff = {
   name: string;
   role: string;
   years: number;
+  /** Días de la semana que no trabaja (0 = domingo). */
+  daysOff: number[];
   bio: string;
   specialties: string[];
 };
@@ -95,6 +105,7 @@ export const staff: DemoStaff[] = [
     name: "Tomás Herrera",
     role: "Barbero · Fundador",
     years: 14,
+    daysOff: [],
     bio: "Cortes clásicos y fades. Si no sabés qué pedir, dejalo en sus manos.",
     specialties: ["Clásico", "Fade", "Barba"],
   },
@@ -103,6 +114,7 @@ export const staff: DemoStaff[] = [
     name: "Julián Márquez",
     role: "Barbero · Color",
     years: 8,
+    daysOff: [],
     bio: "Le gusta el color y las texturas difíciles. Puntual como un reloj.",
     specialties: ["Color", "Textura", "Barba"],
   },
@@ -111,6 +123,7 @@ export const staff: DemoStaff[] = [
     name: "Sofía Rivas",
     role: "Estilista",
     years: 6,
+    daysOff: [3],
     bio: "Cortes con movimiento y tratamientos. Especialista en cabello largo.",
     specialties: ["Largo", "Tratamientos", "Peinados"],
   },
@@ -150,13 +163,13 @@ export const demoSlots: { label: string; slots: DemoSlot[] }[] = [
 ];
 
 export const weekDays = [
-  { weekday: "Jue", day: "12", month: "nov", available: true },
-  { weekday: "Vie", day: "13", month: "nov", available: true },
-  { weekday: "Sáb", day: "14", month: "nov", available: true },
-  { weekday: "Dom", day: "15", month: "nov", available: false },
   { weekday: "Lun", day: "16", month: "nov", available: true },
   { weekday: "Mar", day: "17", month: "nov", available: true },
   { weekday: "Mié", day: "18", month: "nov", available: true },
+  { weekday: "Jue", day: "19", month: "nov", available: true },
+  { weekday: "Vie", day: "20", month: "nov", available: true },
+  { weekday: "Sáb", day: "21", month: "nov", available: true },
+  { weekday: "Dom", day: "22", month: "nov", available: false },
 ];
 
 export type AppointmentStatus = "CONFIRMED" | "PENDING" | "CANCELLED" | "COMPLETED" | "NO_SHOW";
@@ -172,7 +185,7 @@ export type DemoAppointment = {
 
 export const todayAppointments: DemoAppointment[] = [
   { customer: "Martín Paz", service: "Corte clásico", employee: "Tomás", time: "09:00", price: 9000, status: "COMPLETED" },
-  { customer: "Lucas Ferreyra", service: "Corte + barba", employee: "Julián", time: "09:30", price: 14000, status: "COMPLETED" },
+  { customer: "Lucas Ferreyra", service: "Corte + barba", employee: "Julián", time: "09:30", price: 14000, status: "CONFIRMED" },
   { customer: "Ignacio Sosa", service: "Perfilado de barba", employee: "Tomás", time: "10:00", price: 6500, status: "CONFIRMED" },
   { customer: "Ramiro Díaz", service: "Corte clásico", employee: "Sofía", time: "10:30", price: 9000, status: "CONFIRMED" },
   { customer: "Federico Lynch", service: "Color", employee: "Julián", time: "11:00", price: 26000, status: "PENDING" },
@@ -189,18 +202,18 @@ export const adminMetrics = [
   { label: "Ingresos est.", value: "$ 142.000", detail: "hasta ahora", trend: "+12%" },
 ];
 
-export const weekColumns = ["Lun 10", "Mar 11", "Mié 12", "Jue 13", "Vie 14", "Sáb 15"];
+export const weekColumns = ["Lun 16", "Mar 17", "Mié 18", "Jue 19", "Vie 20", "Sáb 21"];
 
 export const calendarAppointments = [
   { day: 0, employee: 0, time: "09:00", duration: 30, customer: "M. Paz", service: "Corte", status: "COMPLETED" as AppointmentStatus },
-  { day: 0, employee: 1, time: "10:00", duration: 50, customer: "L. Ferreyra", service: "Corte + barba", status: "COMPLETED" as AppointmentStatus },
+  { day: 0, employee: 1, time: "10:00", duration: 50, customer: "L. Ferreyra", service: "Corte + barba", status: "CONFIRMED" as AppointmentStatus },
   { day: 0, employee: 2, time: "16:00", duration: 40, customer: "R. Díaz", service: "Tratamiento", status: "CONFIRMED" as AppointmentStatus },
   { day: 1, employee: 0, time: "09:30", duration: 50, customer: "N. Bustos", service: "Corte + barba", status: "CONFIRMED" as AppointmentStatus },
   { day: 1, employee: 1, time: "11:00", duration: 90, customer: "F. Lynch", service: "Color", status: "CONFIRMED" as AppointmentStatus },
   { day: 1, employee: 2, time: "15:00", duration: 30, customer: "I. Sosa", service: "Corte", status: "NO_SHOW" as AppointmentStatus },
   { day: 2, employee: 0, time: "10:00", duration: 30, customer: "S. Vera", service: "Corte", status: "PENDING" as AppointmentStatus },
   { day: 2, employee: 1, time: "15:30", duration: 50, customer: "J. Vidal", service: "Corte + barba", status: "CONFIRMED" as AppointmentStatus },
-  { day: 2, employee: 2, time: "17:00", duration: 40, customer: "E. Rojas", service: "Tratamiento", status: "CONFIRMED" as AppointmentStatus },
+  { day: 2, employee: 0, time: "16:30", duration: 40, customer: "E. Rojas", service: "Tratamiento", status: "CONFIRMED" as AppointmentStatus },
   { day: 3, employee: 0, time: "09:00", duration: 30, customer: "A. Gómez", service: "Corte", status: "CONFIRMED" as AppointmentStatus },
   { day: 3, employee: 1, time: "10:30", duration: 20, customer: "P. Ruiz", service: "Barba", status: "CONFIRMED" as AppointmentStatus },
   { day: 3, employee: 2, time: "16:00", duration: 90, customer: "C. Molina", service: "Color", status: "PENDING" as AppointmentStatus },

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Menu, X } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { business } from "@/lib/demo-data";
@@ -17,75 +18,154 @@ const links = [
 
 export function SiteHeader({ concept }: { concept: Concept }) {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
   const base = `/lab/${concept.id}`;
   const pill = concept.layout.shape === "pill";
   const floating = concept.layout.nav === "floating";
 
+  useEffect(() => {
+    if (!open) return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    panelRef.current?.querySelector<HTMLElement>("a")?.focus();
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-30",
-        floating ? "px-3 pt-3 sm:px-5 sm:pt-5" : "border-b border-line",
-      )}
-    >
-      <div
+    <>
+      <a
+        href="#contenido"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-ink focus:px-4 focus:py-2 focus:text-[13px] focus:text-background"
+      >
+        Saltar al contenido
+      </a>
+
+      <header
         className={cn(
-          "bg-background/85 backdrop-blur-md",
-          floating
-            ? "mx-auto flex w-full max-w-6xl items-center justify-between gap-6 rounded-full border border-line px-4 py-2.5 shadow-card sm:px-6"
-            : "mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-5 py-4 sm:px-8",
+          "sticky top-0 z-30",
+          floating ? "px-3 pt-3 sm:px-5 sm:pt-5" : "border-b border-line",
         )}
       >
-        <Link
-          href={base}
-          className="font-display text-[17px] leading-none font-semibold tracking-[var(--theme-tracking-display)]"
+        <div
+          className={cn(
+            "bg-background/85 backdrop-blur-md",
+            floating
+              ? "mx-auto flex w-full max-w-6xl items-center justify-between gap-6 rounded-full border border-line px-4 py-2.5 shadow-card sm:px-6"
+              : "mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-5 py-4 sm:px-8",
+          )}
         >
-          {business.shortName}
-          <span className="ml-1.5 align-super text-[9px] font-normal tracking-[0.18em] text-ink-muted uppercase">
-            bs as
-          </span>
-        </Link>
-
-        <nav className="hidden items-center gap-7 text-[13px] sm:flex" aria-label="Principal">
-          {links.map((link) => {
-            const href = `${base}${link.href}`;
-            const active = pathname === href;
-            return (
-              <Link
-                key={link.href}
-                href={href}
-                className={cn(
-                  "relative py-1 transition-colors",
-                  active ? "text-ink" : "text-ink-muted hover:text-ink",
-                )}
-                aria-current={active ? "page" : undefined}
-              >
-                {link.label}
-                {active ? (
-                  <span className="absolute inset-x-0 -bottom-0.5 h-px bg-primary" />
-                ) : null}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="flex items-center gap-2">
           <Link
-            href={`${base}/reservar`}
-            className={cn(buttonVariants({ size: "sm", shape: pill ? "pill" : "default" }))}
+            href={base}
+            className="font-display text-[17px] leading-none font-semibold tracking-[var(--theme-tracking-display)]"
           >
-            Reservar turno
+            {business.shortName}
+            <span className="ml-1.5 align-super text-[9px] font-normal tracking-[0.18em] text-ink-muted uppercase">
+              bs as
+            </span>
           </Link>
-          <button
-            type="button"
-            aria-label="Abrir menú"
-            className="grid size-9 place-items-center rounded-md text-ink-muted hover:bg-surface-2 sm:hidden"
-          >
-            <Menu className="size-4" />
-          </button>
+
+          <nav className="hidden items-center gap-7 text-[13px] sm:flex" aria-label="Principal">
+            {links.map((link) => {
+              const href = `${base}${link.href}`;
+              const active = pathname === href;
+              return (
+                <Link
+                  key={link.href}
+                  href={href}
+                  className={cn(
+                    "relative py-1 transition-colors",
+                    active ? "text-ink" : "text-ink-muted hover:text-ink",
+                  )}
+                  aria-current={active ? "page" : undefined}
+                >
+                  {link.label}
+                  {active ? (
+                    <span className="absolute inset-x-0 -bottom-0.5 h-px bg-primary" />
+                  ) : null}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="flex items-center gap-2">
+            <Link
+              href={`${base}/reservar`}
+              className={cn(buttonVariants({ size: "sm", shape: pill ? "pill" : "default" }))}
+            >
+              Reservar turno
+            </Link>
+            <button
+              ref={triggerRef}
+              type="button"
+              onClick={() => setOpen((value) => !value)}
+              aria-expanded={open}
+              aria-controls="menu-movil"
+              aria-label={open ? "Cerrar menú" : "Abrir menú"}
+              className="grid size-9 place-items-center border border-transparent text-ink-muted transition-colors hover:bg-surface-2 sm:hidden"
+            >
+              {open ? <X className="size-4" /> : <Menu className="size-4" />}
+            </button>
+          </div>
         </div>
-      </div>
-    </header>
+
+        {open ? (
+          <div
+            ref={panelRef}
+            id="menu-movil"
+            className={cn(
+              "bg-background sm:hidden",
+              floating
+                ? "mx-auto mt-2 w-full max-w-6xl rounded-lg border border-line px-4 py-2"
+                : "border-b border-line",
+            )}
+          >
+            <nav aria-label="Principal móvil" className="mx-auto flex w-full max-w-6xl flex-col">
+              {links.map((link) => {
+                const href = `${base}${link.href}`;
+                const active = pathname === href;
+                return (
+                  <Link
+                    key={link.href}
+                    href={href}
+                    onClick={() => setOpen(false)}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "flex items-center justify-between border-b border-line py-3.5 text-[15px] last:border-0",
+                      active ? "text-ink" : "text-ink-muted",
+                    )}
+                  >
+                    {link.label}
+                    <span className="font-mono text-[10px] tracking-[0.14em] text-ink-muted/60 uppercase">
+                      {active ? "acá" : ""}
+                    </span>
+                  </Link>
+                );
+              })}
+              <Link
+                href={`${base}/reservar`}
+                onClick={() => setOpen(false)}
+                className={cn(
+                  buttonVariants({ full: true, shape: pill ? "pill" : "default" }),
+                  "my-3",
+                )}
+              >
+                Reservar turno
+              </Link>
+            </nav>
+          </div>
+        ) : null}
+      </header>
+    </>
   );
 }
 

@@ -13,6 +13,7 @@ export const buttonVariants = cva(
         outline: "border border-line bg-transparent text-ink hover:bg-surface-2",
         soft: "bg-surface-2 text-ink hover:brightness-[0.97]",
         ghost: "text-ink hover:bg-surface-2",
+        danger: "bg-danger text-danger-fg hover:brightness-110",
         dark: "bg-ink text-background hover:opacity-90",
       },
       size: {

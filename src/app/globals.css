@@ -27,6 +27,7 @@
   --color-success: var(--theme-success);
   --color-warning: var(--theme-warning);
   --color-danger: var(--theme-danger);
+  --color-danger-fg: var(--theme-danger-fg);
 
   --radius-sm: var(--theme-radius-sm);
   --radius-md: var(--theme-radius-md);
@@ -37,41 +38,18 @@
   --shadow-raised: var(--theme-shadow-raised);
 }
 
+/*
+ * El tema base vive en src/styles/themes/papel.css (`:root`). Acá quedan solo
+ * las variables que no dependen del concepto elegido.
+ */
 :root {
-  /* Tema neutro provisorio. Se reemplaza en la Etapa 2. */
-  --theme-font-display: ui-sans-serif, system-ui, sans-serif;
-  --theme-font-body: ui-sans-serif, system-ui, sans-serif;
-
-  --theme-bg: #f5f6f8;
-  --theme-surface: #ffffff;
-  --theme-surface-2: #f8f9fb;
-  --theme-ink: #0f172a;
-  --theme-ink-muted: #5b6472;
-  --theme-line: #e2e5ea;
-  --theme-primary: #4338ca;
-  --theme-primary-fg: #ffffff;
-  --theme-primary-hover: #3730a3;
-  --theme-accent: #0e7490;
-  --theme-accent-fg: #ffffff;
-  --theme-success: #15803d;
-  --theme-warning: #b45309;
-  --theme-danger: #b91c1c;
-
-  --theme-radius-sm: 4px;
-  --theme-radius-md: 8px;
-  --theme-radius-lg: 12px;
-  --theme-radius-xl: 20px;
-
-  --theme-shadow-card: 0 1px 2px rgb(15 23 42 / 0.06);
-  --theme-shadow-raised: 0 8px 24px rgb(15 23 42 / 0.08);
-
-  /* Defaults por si algún componente se usa fuera de un [data-theme]. */
-  --theme-section-y: 5rem;
-  --theme-tracking-display: -0.02em;
-
   --theme-duration-fast: 120ms;
   --theme-duration-base: 200ms;
   --theme-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Fallbacks por si algún componente se usa antes de cargar el tema. */
+  --theme-section-y: 5rem;
+  --theme-tracking-display: -0.02em;
 }
 
 @layer base {
