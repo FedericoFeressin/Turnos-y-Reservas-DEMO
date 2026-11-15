@@ -9,6 +9,8 @@ import { prisma } from "@/lib/prisma";
  *
  * - Email y contraseña: el negocio da de alta a su equipo; no hay registro
  *   público. Los usuarios se crean desde el seed o desde el panel de equipo.
+ *   `disableSignUp` cierra el endpoint `/api/auth/sign-up/*`: sin esto el
+ *   formulario no se muestra, pero la API aceptaría cuentas nuevas.
  * - `nextCookies` va último: traduce los `Set-Cookie` de Better Auth al helper
  *   de cookies de Next, necesario en Server Actions.
  *
@@ -22,6 +24,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
+    disableSignUp: true,
     minPasswordLength: 8,
   },
   session: {
