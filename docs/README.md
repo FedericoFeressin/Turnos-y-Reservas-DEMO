@@ -1,7 +1,27 @@
 # Booking System — Documentación
 
 Plantilla comercializable de gestión de turnos y reservas.
-Estado actual: **Etapa 1 (análisis y planificación)** — sin código de producto todavía.
+Estado actual: **Etapa 0 y 1 completas**. Etapa 2 (laboratorio visual) por comenzar.
+
+## Estado verificado
+
+| Comprobación | Resultado |
+|---|---|
+| `pnpm typecheck` | ✅ sin errores |
+| `pnpm lint` | ✅ sin errores |
+| `pnpm build` | ✅ 3 rutas estáticas |
+| Node | 24.22.3 (instalado en `~/.local/opt/node`) |
+| pnpm | 12.21.0 |
+| Next.js | 16.4.6 |
+| Tailwind CSS | 4.3.5 |
+| TypeScript | 6.0.3 (fijado: `typescript-eslint` aún no soporta TS 7) |
+
+> El binario de Node quedó en `~/.local/bin`, que no está en el `PATH` por defecto.
+> Agregá esta línea a `~/.bashrc` (o `~/.zshrc`) para no exportarla en cada terminal:
+>
+> ```bash
+> export PATH="$HOME/.local/bin:$PATH"
+> ```
 
 ## Índice
 
@@ -33,29 +53,28 @@ Estado actual: **Etapa 1 (análisis y planificación)** — sin código de produ
 | Etapa 2 | **5 conceptos en baja fidelidad (L1)** → 2 finalistas en L2 → 1 elegido |
 | Email de confirmación | Dentro del MVP, con patrón *outbox* y un canal simple |
 
-## Requisitos de entorno (Etapa 0)
+## Requisitos de entorno
 
-En esta máquina (CachyOS/Arch) **falta todo el toolchain**:
+Ya resuelto en esta máquina. Referencia de lo que se instaló (sin `sudo`, dentro del usuario):
 
 ```bash
-# Opción recomendada: fnm para manejar versiones de Node
-sudo pacman -S fnm
-fnm install --lts
-fnm default lts-latest
-
-# Alternativa directa
-sudo pacman -S nodejs npm
+# Node 24 LTS desde el tarball oficial, verificado con SHA-256
+~/.local/opt/node/          # instalación
+~/.local/bin/{node,npm,npx,pnpm}   # enlaces simbólicos
 
 # pnpm
-npm install -g pnpm
+npm install -g pnpm@latest
+```
 
-# PostgreSQL local
+Pendiente para la Etapa 3 (no hace falta para la Etapa 2):
+
+```bash
 sudo pacman -S postgresql
 sudo -iu postgres initdb -D /var/lib/postgres/data
 sudo systemctl enable --now postgresql
 ```
 
-No hay Docker instalado. Para el MVP alcanza con PostgreSQL como servicio local; Docker se evalúa solo si hace falta reproducir el entorno de producción.
+No hay Docker instalado. Para el MVP alcanza con PostgreSQL como servicio local.
 
 ## Convención de commits
 
