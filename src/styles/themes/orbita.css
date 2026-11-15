@@ -1,0 +1,31 @@
+/* Concepto 3 — Órbita · SaaS moderno */
+[data-theme="orbita"] {
+  --theme-font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --theme-font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --theme-bg: #f5f6f8;
+  --theme-surface: #ffffff;
+  --theme-surface-2: #f1f2f5;
+  --theme-ink: #0f172a;
+  --theme-ink-muted: #5b6472;
+  --theme-line: #d5dae2;
+  --theme-primary: #4338ca;
+  --theme-primary-fg: #ffffff;
+  --theme-primary-hover: #3730a3;
+  --theme-accent: #0e7490;
+  --theme-accent-fg: #ffffff;
+  --theme-success: #15803d;
+  --theme-warning: #b45309;
+  --theme-danger: #b91c1c;
+
+  --theme-radius-sm: 6px;
+  --theme-radius-md: 8px;
+  --theme-radius-lg: 12px;
+  --theme-radius-xl: 16px;
+
+  --theme-shadow-card: 0 1px 2px rgb(15 23 42 / 0.06);
+  --theme-shadow-raised: 0 8px 24px rgb(15 23 42 / 0.08);
+
+  --theme-section-y: 5rem;
+  --theme-tracking-display: -0.015em;
+}

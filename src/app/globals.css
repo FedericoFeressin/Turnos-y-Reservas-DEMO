@@ -65,6 +65,10 @@
   --theme-shadow-card: 0 1px 2px rgb(15 23 42 / 0.06);
   --theme-shadow-raised: 0 8px 24px rgb(15 23 42 / 0.08);
 
+  /* Defaults por si algún componente se usa fuera de un [data-theme]. */
+  --theme-section-y: 5rem;
+  --theme-tracking-display: -0.02em;
+
   --theme-duration-fast: 120ms;
   --theme-duration-base: 200ms;
   --theme-ease: cubic-bezier(0.2, 0.8, 0.2, 1);

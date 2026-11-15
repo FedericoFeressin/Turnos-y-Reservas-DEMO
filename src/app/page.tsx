@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const stages = [
   {
     id: "00",
@@ -41,6 +43,18 @@ export default function Home() {
         en la etapa de definición visual: todavía no hay producto funcional, a
         propósito.
       </p>
+
+      <div className="mt-8 flex flex-wrap items-center gap-3">
+        <Link
+          href="/lab"
+          className="inline-flex h-11 items-center rounded-md bg-primary px-5 text-sm font-medium text-primary-fg transition-colors hover:bg-primary-hover"
+        >
+          Ver los 5 conceptos visuales
+        </Link>
+        <span className="text-sm text-ink-muted">
+          Datos de demo · 7 pantallas · 5 identidades
+        </span>
+      </div>
 
       <ol className="mt-10 space-y-1">
         {stages.map((stage) => (

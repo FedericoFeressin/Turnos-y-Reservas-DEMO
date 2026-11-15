@@ -1,0 +1,31 @@
+/* Concepto 5 — Pulso · Clínico y confiable */
+[data-theme="pulso"] {
+  --theme-font-display: var(--font-lora), Georgia, serif;
+  --theme-font-body: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
+
+  --theme-bg: #f6fafb;
+  --theme-surface: #ffffff;
+  --theme-surface-2: #eaf3f5;
+  --theme-ink: #0c2a33;
+  --theme-ink-muted: #52707a;
+  --theme-line: #d2e1e6;
+  --theme-primary: #0e7490;
+  --theme-primary-fg: #ffffff;
+  --theme-primary-hover: #0b5f77;
+  --theme-accent: #0f766e;
+  --theme-accent-fg: #ffffff;
+  --theme-success: #15803d;
+  --theme-warning: #b45309;
+  --theme-danger: #b91c1c;
+
+  --theme-radius-sm: 4px;
+  --theme-radius-md: 6px;
+  --theme-radius-lg: 8px;
+  --theme-radius-xl: 12px;
+
+  --theme-shadow-card: 0 1px 2px rgb(12 42 51 / 0.06);
+  --theme-shadow-raised: 0 6px 18px rgb(12 42 51 / 0.08);
+
+  --theme-section-y: 5rem;
+  --theme-tracking-display: -0.01em;
+}

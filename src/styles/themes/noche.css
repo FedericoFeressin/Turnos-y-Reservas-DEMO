@@ -1,0 +1,41 @@
+/* Concepto 2 — Noche · Premium oscuro */
+[data-theme="noche"] {
+  --theme-font-display: var(--font-cormorant-garamond), Georgia, serif;
+  --theme-font-body: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+
+  --theme-bg: #0a0a0b;
+  --theme-surface: #121214;
+  --theme-surface-2: #1a1a1d;
+  --theme-ink: #f4f1ea;
+  --theme-ink-muted: #a39c90;
+  --theme-line: #26262a;
+  --theme-primary: #c9a227;
+  --theme-primary-fg: #0a0a0b;
+  --theme-primary-hover: #d8b23a;
+  --theme-accent: #a08a63;
+  --theme-accent-fg: #0a0a0b;
+  --theme-success: #6ee7a8;
+  --theme-warning: #fbbf24;
+  --theme-danger: #f87171;
+
+  --theme-radius-sm: 0px;
+  --theme-radius-md: 2px;
+  --theme-radius-lg: 2px;
+  --theme-radius-xl: 4px;
+
+  --theme-shadow-card: 0 0 0 1px #26262a;
+  --theme-shadow-raised: 0 30px 70px -30px rgb(201 162 39 / 0.25);
+
+  --theme-section-y: 7.5rem;
+  --theme-tracking-display: 0.01em;
+
+  background-image: radial-gradient(
+    90% 55% at 50% -10%,
+    #17140d 0%,
+    transparent 60%
+  );
+}
+
+[data-theme="noche"] .hairline {
+  border-color: color-mix(in oklab, var(--theme-primary) 35%, var(--theme-line));
+}

@@ -1,0 +1,35 @@
+/* Concepto 1 — Papel · Minimalista editorial */
+[data-theme="papel"] {
+  --theme-font-display: var(--font-instrument-serif), Georgia, "Times New Roman", serif;
+  --theme-font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --theme-bg: #faf8f3;
+  --theme-surface: #ffffff;
+  --theme-surface-2: #f2eee5;
+  --theme-ink: #14140f;
+  --theme-ink-muted: #6b655b;
+  --theme-line: #e5dfd3;
+  --theme-primary: #2f5d50;
+  --theme-primary-fg: #ffffff;
+  --theme-primary-hover: #264a40;
+  --theme-accent: #9a5a27;
+  --theme-accent-fg: #ffffff;
+  --theme-success: #2f6b4f;
+  --theme-warning: #8a5f14;
+  --theme-danger: #a63a2e;
+
+  --theme-radius-sm: 2px;
+  --theme-radius-md: 4px;
+  --theme-radius-lg: 6px;
+  --theme-radius-xl: 8px;
+
+  --theme-shadow-card: 0 0 0 0 transparent;
+  --theme-shadow-raised: 0 18px 40px -24px rgb(20 20 15 / 0.25);
+
+  --theme-section-y: 7rem;
+  --theme-tracking-display: -0.025em;
+}
+
+[data-theme="papel"] .rule {
+  border-top: 1px solid var(--theme-line);
+}

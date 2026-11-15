@@ -1,0 +1,41 @@
+/* Concepto 4 — Brisa · Creativo y comercial */
+[data-theme="brisa"] {
+  --theme-font-display: var(--font-bricolage-grotesque), ui-sans-serif, system-ui, sans-serif;
+  --theme-font-body: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+
+  --theme-bg: #fffcf5;
+  --theme-surface: #ffffff;
+  --theme-surface-2: #fbefe2;
+  --theme-ink: #1c1917;
+  --theme-ink-muted: #6b645f;
+  --theme-line: #e8d9c5;
+  --theme-primary: #c2410c;
+  --theme-primary-fg: #ffffff;
+  --theme-primary-hover: #9a3412;
+  --theme-accent: #0f766e;
+  --theme-accent-fg: #ffffff;
+  --theme-success: #15803d;
+  --theme-warning: #b45309;
+  --theme-danger: #b91c1c;
+
+  --theme-radius-sm: 10px;
+  --theme-radius-md: 16px;
+  --theme-radius-lg: 24px;
+  --theme-radius-xl: 28px;
+
+  --theme-shadow-card: 0 8px 24px rgb(28 25 23 / 0.07);
+  --theme-shadow-raised: 0 24px 56px rgb(28 25 23 / 0.12);
+
+  --theme-section-y: 6rem;
+  --theme-tracking-display: -0.025em;
+
+  background-image:
+    radial-gradient(50% 40% at 85% 5%, #ffe9d6 0%, transparent 70%),
+    radial-gradient(40% 35% at 5% 25%, #e9f5f1 0%, transparent 70%);
+}
+
+[data-theme="brisa"] .blob {
+  background-image: linear-gradient(135deg, #fb7185 0%, #f97316 100%);
+  filter: blur(40px);
+  opacity: 0.28;
+}
