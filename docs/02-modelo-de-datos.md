@@ -580,10 +580,10 @@ El buffer entre turnos es parte del tiempo ocupado. Si el turno termina 10:30 y 
 
 ## 5. Restricciones que Prisma no puede expresar
 
-Se agregan en una migración SQL versionada (`prisma migrate dev --create-only` + edición manual):
+Se agregan en una migración SQL versionada (`prisma migrate dev --create-only` + edición manual). En la implementación quedaron en la migración inicial `20261115175237_init`:
 
 ```sql
--- prisma/migrations/XXXX_appointment_integrity/migration.sql
+-- prisma/migrations/20261115175237_init/migration.sql
 
 -- Necesario para combinar igualdad (=) con solapamiento (&&) en un índice GiST
 CREATE EXTENSION IF NOT EXISTS btree_gist;
@@ -724,15 +724,16 @@ PENDING ─────────┼──────────────
 
 ## 9. Datos de demo (seed)
 
-Un solo seed reproducible (`prisma/seed.ts`), idempotente:
+Un solo seed reproducible (`prisma/seed.ts`), idempotente y relativo a la fecha en que se ejecuta:
 
 - Negocio: **"Estudio Norte"** (barbería), `slug: estudio-norte`, timezone `America/Argentina/Buenos_Aires`.
 - Horarios: lun–vie 09:00–13:00 y 15:00–20:00; sáb 09:00–14:00; dom cerrado.
-- 6 servicios (corte, corte + barba, barba, color, lavado, tratamiento) con duraciones de 20 a 90 min y buffers de 0 a 15 min.
-- 3 profesionales con horarios distintos (uno no trabaja los miércoles) y un feriado próximo.
-- 12 clientes con teléfonos normalizados.
-- Turnos: 3 días pasados con estados variados (para el historial), hoy y mañana con huecos libres.
-- 2 usuarios: `owner@demo.local` y `staff@demo.local` (contraseña de demo documentada en el README, solo entorno local).
+- 6 servicios (corte, corte + barba, barba, color, corte para niños, tratamiento) con duraciones de 20 a 90 min y buffers de 5 a 15 min.
+- 3 profesionales (uno no trabaja los miércoles) y un feriado el lunes siguiente.
+- 17 clientes con teléfonos normalizados.
+- 23 turnos sobre la semana en curso: los días ya pasados quedan `COMPLETED` (salvo cancelados o ausentes), y los próximos mezclan `CONFIRMED` y `PENDING` para que el panel tenga actividad.
+- 1 usuario: `tomas@estudionorte.com.ar` (`usr_tomas`), con membresía `OWNER` y vinculado al profesional fundador. Las credenciales de acceso se agregan en la etapa de autenticación.
+- Si el seed se corre un domingo, arranca en el lunes siguiente para no sembrar una semana ya terminada.
 
 > El seed **no** se usa como sustituto de funcionalidad: sirve para ver el sistema poblado y para los tests E2E.
 
