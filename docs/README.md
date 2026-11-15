@@ -1,7 +1,7 @@
 # Booking System — Documentación
 
 Plantilla comercializable de gestión de turnos y reservas.
-Estado actual: **Etapas 0, 1 y 2 completas**; **Etapa 3 en curso** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional y **autenticación operativa** (Better Auth con email y contraseña). Falta conectar el panel y el flujo de reserva a la base.
+Estado actual: **Etapas 0, 1 y 2 completas**; **Etapa 3 en curso** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña) y un **panel con la agenda real** de PostgreSQL (solo lectura). Falta el CRUD de servicios/equipo y conectar el flujo público de reserva a la base.
 
 Laboratorio visual: `pnpm dev` → <http://localhost:3000/lab>
 Panel protegido: `pnpm dev` → <http://localhost:3000/admin> (redirige a `/ingresar`)
@@ -16,6 +16,7 @@ Panel protegido: `pnpm dev` → <http://localhost:3000/admin> (redirige a `/ingr
 | `pnpm db:seed` | ✅ 23 turnos, 6 servicios, 3 profesionales, 17 clientes, cuenta de acceso |
 | Anti-solapamiento | ✅ `EXCLUDE USING gist` rechaza turnos solapados del mismo profesional |
 | Autenticación | ✅ login, guard de `/admin`, sesión y logout |
+| Panel | ✅ agenda del día desde PostgreSQL, KPIs, navegación por fecha, estados vacío/cerrado/feriado |
 | Contraste AA por tokens | ✅ 14 pares × 5 conceptos sin fallas |
 | Node | 24.22.3 (instalado en `~/.local/opt/node`) |
 | pnpm | 12.21.0 |
@@ -197,6 +198,31 @@ No hay registro público: los usuarios se crean desde el seed o, más adelante, 
 - Contraseña: `estudio-norte`
 
 Solo para desarrollo local. En producción se cambia al aprovisionar la instancia.
+
+## Panel
+
+`/admin` es la agenda del negocio, todavía **de solo lectura**.
+
+| Pieza | Archivo |
+|---|---|
+| Shell del panel | `src/app/admin/layout.tsx` |
+| Navegación (server + cliente) | `src/app/admin/panel-nav.tsx` |
+| Agenda del día | `src/app/admin/page.tsx` |
+| Contexto de sesión y membresía | `src/lib/business.ts` |
+| Consultas de agenda | `src/lib/booking/queries.ts` |
+| Helpers de fecha y precio | `src/lib/date.ts` |
+| Etiquetas y tonos de estado | `src/lib/appointments.ts` |
+
+Comportamiento:
+
+1. El layout valida sesión y membresía activa una sola vez con `getBusinessContext` (memoizado por request con `cache`). Sin negocio muestra un estado con cierre de sesión.
+2. La agenda toma `?fecha=yyyy-MM-dd`; si falta o es inválida, usa la fecha de hoy en la zona horaria del negocio.
+3. El rango del día se calcula con `dayBounds` y todos los turnos se filtran por `businessId` (frontera del tenant).
+4. Se muestran KPIs (turnos sin cancelar, confirmados, pendientes y facturación estimada) y el listado con horario, cliente, servicio, profesional y estado.
+5. Estados del día: `feriado` (cierre por feriado), `cerrado` (sin horario cargado), `sin turnos` (día abierto sin reservas) y listado normal. Los turnos cancelados se muestran atenuados, no se ocultan.
+6. La navegación permite ir al día anterior, al siguiente y volver a hoy.
+
+Todavía no hay escrituras: crear, confirmar o cancelar turnos llega con el CRUD y el motor de reservas.
 
 ## Convención de commits
 
