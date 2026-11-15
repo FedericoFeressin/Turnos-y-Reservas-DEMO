@@ -67,8 +67,32 @@ export function minutesToTime(minutes: number): string {
 
 /**
  * Clave `yyyy-MM-dd` → `Date` en UTC. Es el formato que espera Prisma para las
- * columnas `@db.Date` (feriados): la fecha se guarda sin hora ni zona.
+ * columnas `@db.Date` (feriados y fecha de nacimiento): la fecha se guarda sin
+ * hora ni zona.
  */
 export function dateKeyToUtcDate(dateKey: string): Date {
   return new Date(`${dateKey}T00:00:00Z`);
+}
+
+/** `@db.Date` (medianoche UTC) → `yyyy-MM-dd`, el valor de un `<input type="date">`. */
+export function dateToDateKey(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+/** `@db.Date` → texto legible sin corrimiento de zona horaria. */
+export function formatDateOnly(date: Date): string {
+  return formatInTimeZone(date, "UTC", "d 'de' MMMM 'de' yyyy", { locale: es });
+}
+
+/** Fecha de un turno para el historial: `Lun 16 nov 2026`. */
+export function formatHistoryDate(date: Date, timezone: string): string {
+  const label = formatInTimeZone(date, timezone, "EEE d MMM yyyy", {
+    locale: es,
+  });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+/** Día y mes de un turno: `16 nov`. */
+export function formatShortDay(date: Date, timezone: string): string {
+  return formatInTimeZone(date, timezone, "d MMM", { locale: es });
 }

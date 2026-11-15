@@ -27,7 +27,7 @@ const items: NavItem[] = [
   { href: "/admin", label: "Agenda", icon: CalendarDays },
   { href: "/admin/servicios", label: "Servicios", icon: Scissors },
   { href: "/admin/equipo", label: "Equipo", icon: Users },
-  { href: null, label: "Clientes", icon: UserRound },
+  { href: "/admin/clientes", label: "Clientes", icon: UserRound },
   { href: null, label: "Configuración", icon: Settings },
 ];
 

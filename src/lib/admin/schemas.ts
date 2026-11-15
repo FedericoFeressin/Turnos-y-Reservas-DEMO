@@ -94,13 +94,81 @@ export const employeeSchema = z.object({
   serviceIds: z.array(z.string().min(1)),
 });
 
+function isValidDateInput(value: string): boolean {
+  if (value === "") return true;
+  const date = new Date(`${value}T00:00:00Z`);
+  return (
+    !Number.isNaN(date.getTime()) &&
+    date.toISOString().slice(0, 10) === value &&
+    date <= new Date()
+  );
+}
+
+export const customerSchema = z.object({
+  firstName: z
+    .string()
+    .trim()
+    .min(1, "El nombre es obligatorio.")
+    .max(60, "Máximo 60 caracteres."),
+  lastName: z.string().trim().max(60, "Máximo 60 caracteres."),
+  phone: z
+    .string()
+    .trim()
+    .min(6, "Ingresá un teléfono.")
+    .max(24, "Máximo 24 caracteres.")
+    .regex(/^[0-9+()\s-]+$/, "Solo números, espacios, paréntesis y +.")
+    .refine(
+      (value) => value.replace(/\D/g, "").length >= 6,
+      "El teléfono debe tener al menos 6 dígitos.",
+    ),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .max(120, "Máximo 120 caracteres.")
+    .refine(
+      (value) => value === "" || z.email().safeParse(value).success,
+      "Revisá el email.",
+    ),
+  birthDate: z
+    .string()
+    .trim()
+    .regex(/^$|^\d{4}-\d{2}-\d{2}$/, "Usá el formato aaaa-mm-dd.")
+    .refine(isValidDateInput, "Esa fecha no es válida."),
+  notes: z.string().trim().max(600, "Máximo 600 caracteres."),
+  tags: z
+    .string()
+    .trim()
+    .max(200, "Máximo 200 caracteres.")
+    .refine(
+      (value) =>
+        value
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter(Boolean)
+          .every((tag) => tag.length <= 24),
+      "Cada etiqueta puede tener hasta 24 caracteres.",
+    ),
+  marketingOptIn: z.boolean(),
+  isBlocked: z.boolean(),
+});
+
+/** Teléfono comparable: solo dígitos con prefijo `+`. */
+export function normalizePhone(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  return digits ? `+${digits}` : "";
+}
+
 export type ServiceInput = z.output<typeof serviceSchema>;
 export type ServiceFormValues = z.input<typeof serviceSchema>;
 export type EmployeeInput = z.output<typeof employeeSchema>;
 export type EmployeeFormValues = z.input<typeof employeeSchema>;
+export type CustomerInput = z.output<typeof customerSchema>;
+export type CustomerFormValues = z.input<typeof customerSchema>;
 
 export type ServiceFieldErrors = Partial<Record<keyof ServiceFormValues, string>>;
 export type EmployeeFieldErrors = Partial<Record<keyof EmployeeFormValues, string>>;
+export type CustomerFieldErrors = Partial<Record<keyof CustomerFormValues, string>>;
 
 export type ServiceFormState = {
   error: string | null;
@@ -112,6 +180,12 @@ export type EmployeeFormState = {
   error: string | null;
   fieldErrors: EmployeeFieldErrors;
   values: EmployeeFormValues | null;
+};
+
+export type CustomerFormState = {
+  error: string | null;
+  fieldErrors: CustomerFieldErrors;
+  values: CustomerFormValues | null;
 };
 
 /** Conserva el primer error por campo, que es el que se muestra. */
@@ -168,5 +242,19 @@ export function readEmployeeForm(formData: FormData): EmployeeFormValues {
       .getAll("serviceIds")
       .map((value) => String(value))
       .filter(Boolean),
+  };
+}
+
+export function readCustomerForm(formData: FormData): CustomerFormValues {
+  return {
+    firstName: text(formData, "firstName"),
+    lastName: text(formData, "lastName"),
+    phone: text(formData, "phone"),
+    email: text(formData, "email"),
+    birthDate: text(formData, "birthDate"),
+    notes: text(formData, "notes"),
+    tags: text(formData, "tags"),
+    marketingOptIn: checked(formData, "marketingOptIn"),
+    isBlocked: checked(formData, "isBlocked"),
   };
 }
