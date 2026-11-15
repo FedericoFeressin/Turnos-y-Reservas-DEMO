@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 export default async function AdminAgendaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ fecha?: string }>;
+  searchParams: Promise<{ fecha?: string; error?: string }>;
 }) {
   const { membership } = await getBusinessContext();
 
@@ -40,7 +40,7 @@ export default async function AdminAgendaPage({
   if (!membership) return null;
 
   const { business } = membership;
-  const { fecha } = await searchParams;
+  const { fecha, error } = await searchParams;
 
   const currentKey = todayKey(business.timezone);
   const dateKey = fecha && isValidDateKey(fecha) ? fecha : currentKey;
@@ -108,6 +108,15 @@ export default async function AdminAgendaPage({
           </Link>
         </nav>
       </div>
+
+      {error === "permiso" ? (
+        <p
+          role="alert"
+          className="mt-6 rounded-md border border-danger/30 bg-danger/5 px-3 py-2 text-[13px] text-danger"
+        >
+          Tu rol no permite modificar el catálogo ni el equipo.
+        </p>
+      ) : null}
 
       <section aria-label="Resumen del día" className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
