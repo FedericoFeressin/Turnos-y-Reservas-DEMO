@@ -29,3 +29,6 @@ test-results/
 *.log
 .vscode/
 .idea/
+
+# cliente Prisma generado
+/src/generated/prisma
