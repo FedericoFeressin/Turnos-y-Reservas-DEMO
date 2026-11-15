@@ -1,0 +1,123 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/*
+  Contrato de tokens — ver docs/03-experimentacion-visual.md §1
+  Ningún componente debe usar colores literales: solo utilidades que
+  apuntan a estas variables (bg-background, text-ink, border-line, ...).
+  Cada concepto visual redefine el bloque :root en src/styles/themes/*.css
+  mediante [data-theme="..."].
+*/
+
+@theme inline {
+  --font-sans: var(--theme-font-body);
+  --font-display: var(--theme-font-display);
+
+  --color-background: var(--theme-bg);
+  --color-surface: var(--theme-surface);
+  --color-surface-2: var(--theme-surface-2);
+  --color-ink: var(--theme-ink);
+  --color-ink-muted: var(--theme-ink-muted);
+  --color-line: var(--theme-line);
+  --color-primary: var(--theme-primary);
+  --color-primary-fg: var(--theme-primary-fg);
+  --color-primary-hover: var(--theme-primary-hover);
+  --color-accent: var(--theme-accent);
+  --color-accent-fg: var(--theme-accent-fg);
+  --color-success: var(--theme-success);
+  --color-warning: var(--theme-warning);
+  --color-danger: var(--theme-danger);
+
+  --radius-sm: var(--theme-radius-sm);
+  --radius-md: var(--theme-radius-md);
+  --radius-lg: var(--theme-radius-lg);
+  --radius-xl: var(--theme-radius-xl);
+
+  --shadow-card: var(--theme-shadow-card);
+  --shadow-raised: var(--theme-shadow-raised);
+}
+
+:root {
+  /* Tema neutro provisorio. Se reemplaza en la Etapa 2. */
+  --theme-font-display: ui-sans-serif, system-ui, sans-serif;
+  --theme-font-body: ui-sans-serif, system-ui, sans-serif;
+
+  --theme-bg: #f5f6f8;
+  --theme-surface: #ffffff;
+  --theme-surface-2: #f8f9fb;
+  --theme-ink: #0f172a;
+  --theme-ink-muted: #5b6472;
+  --theme-line: #e2e5ea;
+  --theme-primary: #4338ca;
+  --theme-primary-fg: #ffffff;
+  --theme-primary-hover: #3730a3;
+  --theme-accent: #0e7490;
+  --theme-accent-fg: #ffffff;
+  --theme-success: #15803d;
+  --theme-warning: #b45309;
+  --theme-danger: #b91c1c;
+
+  --theme-radius-sm: 4px;
+  --theme-radius-md: 8px;
+  --theme-radius-lg: 12px;
+  --theme-radius-xl: 20px;
+
+  --theme-shadow-card: 0 1px 2px rgb(15 23 42 / 0.06);
+  --theme-shadow-raised: 0 8px 24px rgb(15 23 42 / 0.08);
+
+  --theme-duration-fast: 120ms;
+  --theme-duration-base: 200ms;
+  --theme-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@layer base {
+  * {
+    border-color: var(--theme-line);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--theme-bg);
+    color: var(--theme-ink);
+    font-family: var(--theme-font-body);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--theme-font-display);
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--theme-primary);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--theme-primary);
+    color: var(--theme-primary-fg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
