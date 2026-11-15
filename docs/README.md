@@ -1,7 +1,7 @@
 # Booking System — Documentación
 
 Plantilla comercializable de gestión de turnos y reservas.
-Estado actual: **Etapas 0, 1 y 2 completas**; **Etapa 3 en curso** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña), un **panel con la agenda real** de PostgreSQL (solo lectura) y el **CRUD de servicios y equipo**. Falta clientes, configuración y conectar el flujo público de reserva a la base.
+Estado actual: **Etapas 0, 1 y 2 completas**; **Etapa 3 en curso** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña), un **panel con la agenda real** de PostgreSQL (solo lectura) y el **CRUD de servicios, equipo y clientes**. Falta configuración y conectar el flujo público de reserva a la base.
 
 Laboratorio visual: `pnpm dev` → <http://localhost:3000/lab>
 Panel protegido: `pnpm dev` → <http://localhost:3000/admin> (redirige a `/ingresar`)
@@ -18,6 +18,7 @@ Panel protegido: `pnpm dev` → <http://localhost:3000/admin> (redirige a `/ingr
 | Autenticación | ✅ login, guard de `/admin`, sesión y logout |
 | Panel | ✅ agenda del día desde PostgreSQL, KPIs, navegación por fecha, estados vacío/cerrado/feriado |
 | Catálogo | ✅ alta, edición y activación de servicios y profesionales, con permisos por rol |
+| Clientes | ✅ alta, edición, búsqueda e historial de turnos con KPIs |
 | Contraste AA por tokens | ✅ 14 pares × 5 conceptos sin fallas |
 | Node | 24.22.3 (instalado en `~/.local/opt/node`) |
 | pnpm | 12.21.0 |
@@ -252,6 +253,34 @@ Reglas:
 7. **Acciones con PRG.** Las acciones exitosas redirigen con `?ok=creado|actualizado`, evitando reenvíos al refrescar.
 
 Pendiente en esta sección: horarios de atención por profesional, ausencias y borrado definitivo.
+
+## Clientes
+
+| Ruta | Contenido |
+|---|---|
+| `/admin/clientes` | Directorio con búsqueda + alta/edición en línea |
+| `/admin/clientes/[id]` | Ficha con contacto, preferencias, KPIs e historial de turnos |
+
+| Pieza | Archivo |
+|---|---|
+| Esquema `customerSchema` y `normalizePhone` | `src/lib/admin/schemas.ts` |
+| Consultas `listCustomers` y `getCustomer` | `src/lib/admin/queries.ts` |
+| Server Action `saveCustomerAction` | `src/app/admin/clientes/actions.ts` |
+| Formulario | `src/app/admin/clientes/customer-form.tsx` |
+| Listado y ficha | `src/app/admin/clientes/{page,[id]/page}.tsx` |
+
+Reglas:
+
+1. **Teléfono como identidad.** Se guarda el texto tal como lo escribió el usuario y, además, `phoneNormalized` (`+` y solo dígitos). La unicidad es por `(businessId, phoneNormalized)`.
+2. **Duplicados.** Antes de guardar se busca otro cliente con el mismo teléfono, **incluidos los dados de baja**, porque el índice de la base no distingue `deletedAt`. Si existe, el error se muestra sobre el campo teléfono con el nombre del cliente que ya lo usa.
+3. **Edición.** Al editar, la verificación de duplicados excluye al propio cliente.
+4. **Fecha de nacimiento.** Se carga como `aaaa-mm-dd` y se guarda en una columna `@db.Date` a medianoche UTC; se muestra con `formatDateOnly` para que no se corra un día.
+5. **Etiquetas.** Se cargan separadas por comas y se guardan como `String[]` sin vacíos ni duplicados.
+6. **Búsqueda.** Filtra por nombre, apellido, email, teléfono visible y teléfono normalizado (solo dígitos), sin distinguir mayúsculas. `?q=` es el parámetro.
+7. **Historial y KPIs.** La ficha muestra turnos, cancelados/ausencias, total gastado (solo `COMPLETED`) y próximo turno (`PENDING`/`CONFIRMED` en el futuro). El historial incluye servicio, profesional, duración, precio y estado.
+8. **Permisos y PRG.** Mismas reglas que el catálogo: `OWNER`/`ADMIN` escriben con `requireManager`; el alta redirige a la ficha (`?ok=creado`) y la edición al listado (`?ok=actualizado`).
+
+Pendiente en esta sección: baja lógica, fusión de duplicados históricos y vínculo con el flujo público de reserva.
 
 ## Convención de commits
 
