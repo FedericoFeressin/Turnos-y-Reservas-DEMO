@@ -12,6 +12,7 @@ import { config } from "dotenv";
 
 import { addDays } from "date-fns";
 import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
+import { hashPassword } from "better-auth/crypto";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 import { PrismaClient } from "../src/generated/prisma/client";
@@ -270,6 +271,22 @@ async function main() {
       businessId,
       userId: owner.id,
       role: MembershipRole.OWNER,
+    },
+  });
+
+  // Cuenta de acceso de la demo. Better Auth guarda la contraseña en `Account`
+  // con providerId "credential" y accountId = id del usuario.
+  const ownerPassword = process.env.SEED_OWNER_PASSWORD ?? "estudio-norte";
+  await prisma.account.deleteMany({
+    where: { userId: owner.id, providerId: "credential" },
+  });
+  await prisma.account.create({
+    data: {
+      id: `acc_${owner.id}_credential`,
+      accountId: owner.id,
+      providerId: "credential",
+      userId: owner.id,
+      password: await hashPassword(ownerPassword),
     },
   });
 
