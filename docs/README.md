@@ -37,6 +37,7 @@ Laboratorio visual: `pnpm dev` → <http://localhost:3000/lab>
 | [01 — Arquitectura y tecnologías](./01-arquitectura-y-tecnologias.md) | Evaluación de la propuesta, comparación de stack, arquitectura, multi-tenant vs instancia única, estructura de carpetas, MVP, roadmap |
 | [02 — Modelo de datos](./02-modelo-de-datos.md) | Esquema Prisma completo, restricciones SQL, índices, disponibilidad, estados, seed |
 | [03 — Sistema visual y experimentación](./03-experimentacion-visual.md) | 5 conceptos visuales con tokens, matriz de decisión, plan de la Etapa 2 y registro de ejecución de las rondas L1 y L2 |
+| [04 — Sistema visual de Papel](./04-sistema-visual.md) | Tokens, paleta, tipografía, componentes, accesibilidad y reglas de uso del tema del producto |
 
 ## Decisiones tomadas
 

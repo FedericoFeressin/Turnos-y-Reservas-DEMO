@@ -317,7 +317,7 @@ turnos-y-reservas/
 │   ├── 01-arquitectura-y-tecnologias.md
 │   ├── 02-modelo-de-datos.md
 │   ├── 03-experimentacion-visual.md
-│   └── 04-sistema-visual.md          ← se crea al cerrar Etapa 2
+│   └── 04-sistema-visual.md          ← paleta, tipografía, componentes y reglas de Papel
 ├── prisma/
 │   ├── schema.prisma
 │   ├── migrations/
