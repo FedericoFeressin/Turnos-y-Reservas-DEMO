@@ -2,6 +2,7 @@
   "name": "turnos-y-reservas",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@12.21.0",
   "engines": {
     "node": ">=24"
@@ -12,6 +13,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test",
     "db:start": "bash scripts/dev-db.sh start",
     "db:stop": "bash scripts/dev-db.sh stop",
     "db:status": "bash scripts/dev-db.sh status",
@@ -38,6 +40,8 @@
     "zod": "4.3.6"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.65.1",
     "@tailwindcss/postcss": "4.3.5",
     "@types/node": "26.6.6",
     "@types/pg": "8.23.1",
