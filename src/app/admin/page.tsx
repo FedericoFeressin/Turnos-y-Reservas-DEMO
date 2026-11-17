@@ -3,8 +3,13 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { controlClass } from "@/components/ui/field";
 import { appointmentStatusMeta } from "@/lib/appointments";
+import {
+  allowedTransitions,
+  type AppointmentIntent,
+} from "@/lib/admin/appointments";
 import { getBusinessContext } from "@/lib/business";
 import {
   getBusinessSchedule,
@@ -25,14 +30,30 @@ import {
 } from "@/lib/date";
 import { cn } from "@/lib/utils";
 
+import { changeAppointmentStatusAction } from "./turnos/actions";
+
 export const metadata: Metadata = {
   title: "Agenda",
+};
+
+const intentLabels: Record<AppointmentIntent, string> = {
+  confirm: "Confirmar",
+  cancel: "Cancelar",
+  complete: "Completar",
+  no_show: "No asistió",
+};
+
+const errorMessages: Record<string, string> = {
+  permiso: "Tu rol no permite modificar el catálogo ni los turnos.",
+  accion: "No se pudo interpretar la acción. Intentá de nuevo.",
+  turno: "Ese turno ya no existe.",
+  transicion: "Ese turno ya no admite ese cambio de estado.",
 };
 
 export default async function AdminAgendaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ fecha?: string; error?: string }>;
+  searchParams: Promise<{ fecha?: string; error?: string; ok?: string }>;
 }) {
   const { membership } = await getBusinessContext();
 
@@ -40,7 +61,7 @@ export default async function AdminAgendaPage({
   if (!membership) return null;
 
   const { business } = membership;
-  const { fecha, error } = await searchParams;
+  const { fecha, error, ok } = await searchParams;
 
   const currentKey = todayKey(business.timezone);
   const dateKey = fecha && isValidDateKey(fecha) ? fecha : currentKey;
@@ -109,12 +130,21 @@ export default async function AdminAgendaPage({
         </nav>
       </div>
 
-      {error === "permiso" ? (
+      {error ? (
         <p
           role="alert"
           className="mt-6 rounded-md border border-danger/30 bg-danger/5 px-3 py-2 text-[13px] text-danger"
         >
-          Tu rol no permite modificar el catálogo ni el equipo.
+          {errorMessages[error] ?? "No se pudo completar la acción."}
+        </p>
+      ) : null}
+
+      {ok ? (
+        <p
+          role="status"
+          className="mt-6 rounded-md border border-success/30 bg-success/5 px-3 py-2 text-[13px] text-success"
+        >
+          Turno {ok} correctamente.
         </p>
       ) : null}
 
@@ -234,6 +264,54 @@ export default async function AdminAgendaPage({
                       {meta.label}
                     </Badge>
                   </div>
+
+                  {appointment.cancellationReason ? (
+                    <p className="w-full text-[11px] text-ink-muted">
+                      Motivo: {appointment.cancellationReason}
+                    </p>
+                  ) : null}
+
+                  {allowedTransitions[appointment.status].length > 0 ? (
+                    <form
+                      action={changeAppointmentStatusAction}
+                      className="flex w-full flex-wrap items-center gap-2 border-t border-line pt-3"
+                    >
+                      <input type="hidden" name="id" value={appointment.id} />
+
+                      {allowedTransitions[appointment.status].includes("cancel") ? (
+                        <input
+                          type="text"
+                          name="reason"
+                          maxLength={200}
+                          aria-label={`Motivo de cancelación de ${customer}`}
+                          placeholder="Motivo (opcional)"
+                          className={cn(controlClass, "h-8 max-w-56 text-[12px]")}
+                        />
+                      ) : null}
+
+                      {allowedTransitions[appointment.status].map((intent) => (
+                        <Button
+                          key={intent}
+                          type="submit"
+                          name="intent"
+                          value={intent}
+                          size="sm"
+                          variant={
+                            intent === "confirm"
+                              ? "primary"
+                              : intent === "cancel"
+                                ? "ghost"
+                                : "outline"
+                          }
+                          className={
+                            intent === "cancel" ? "text-danger" : undefined
+                          }
+                        >
+                          {intentLabels[intent]}
+                        </Button>
+                      ))}
+                    </form>
+                  ) : null}
                 </li>
               );
             })}

@@ -25,6 +25,8 @@ export async function getDayAgenda(
       priceCents: true,
       currency: true,
       durationMinutes: true,
+      customerNotes: true,
+      cancellationReason: true,
       customer: {
         select: { firstName: true, lastName: true, phone: true },
       },
