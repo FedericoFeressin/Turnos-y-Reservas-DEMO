@@ -27,7 +27,7 @@ export async function changeAppointmentStatusAction(formData: FormData) {
   const parsed = appointmentActionSchema.safeParse(values);
 
   if (!parsed.success) {
-    redirect("/admin?error=accion");
+    redirect("/admin/turnos?error=accion");
   }
 
   const { id, intent, reason } = parsed.data;
@@ -42,11 +42,11 @@ export async function changeAppointmentStatusAction(formData: FormData) {
   });
 
   if (!appointment) {
-    redirect("/admin?error=turno");
+    redirect("/admin/turnos?error=turno");
   }
 
   if (!allowedTransitions[appointment.status].includes(intent)) {
-    redirect("/admin?error=transicion");
+    redirect("/admin/turnos?error=transicion");
   }
 
   const outcome = intentOutcome[intent];
@@ -84,5 +84,6 @@ export async function changeAppointmentStatusAction(formData: FormData) {
   const dateKey = dateKeyInZone(appointment.startsAt, membership.business.timezone);
 
   revalidatePath("/admin");
-  redirect(`/admin?fecha=${dateKey}&ok=${outcome.ok}`);
+  revalidatePath("/admin/turnos");
+  redirect(`/admin/turnos?fecha=${dateKey}&ok=${outcome.ok}`);
 }

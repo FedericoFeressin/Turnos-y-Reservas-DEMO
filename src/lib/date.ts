@@ -35,6 +35,33 @@ export function isoDayOfWeek(dateKey: string): number {
   return day === 0 ? 7 : day;
 }
 
+/**
+ * Rango `[lunes 00:00, lunes siguiente 00:00)` de la semana que contiene
+ * `dateKey`, en la zona del negocio. `endKey` es el primer día de la semana
+ * siguiente; `endKeyInclusive` sirve para etiquetar el domingo.
+ */
+export function weekBounds(
+  dateKey: string,
+  timezone: string,
+): {
+  startKey: string;
+  endKey: string;
+  endKeyInclusive: string;
+  start: Date;
+  end: Date;
+} {
+  const startKey = shiftDateKey(dateKey, 1 - isoDayOfWeek(dateKey));
+  const endKey = shiftDateKey(startKey, 7);
+
+  return {
+    startKey,
+    endKey,
+    endKeyInclusive: shiftDateKey(startKey, 6),
+    start: dayBounds(startKey, timezone).start,
+    end: dayBounds(endKey, timezone).start,
+  };
+}
+
 export function formatTime(date: Date, timezone: string): string {
   return formatInTimeZone(date, timezone, "HH:mm");
 }

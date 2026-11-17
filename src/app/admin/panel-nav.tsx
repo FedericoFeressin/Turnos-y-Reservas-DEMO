@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   CalendarDays,
   Clock,
+  LayoutDashboard,
   Scissors,
   Settings,
   UserRound,
@@ -25,7 +26,8 @@ type NavItem = {
  * que terminen en 404.
  */
 const items: NavItem[] = [
-  { href: "/admin", label: "Agenda", icon: CalendarDays },
+  { href: "/admin", label: "Panel", icon: LayoutDashboard },
+  { href: "/admin/turnos", label: "Agenda", icon: CalendarDays },
   { href: "/admin/servicios", label: "Servicios", icon: Scissors },
   { href: "/admin/equipo", label: "Equipo", icon: Users },
   { href: "/admin/horarios", label: "Horarios", icon: Clock },

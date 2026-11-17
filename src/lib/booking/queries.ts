@@ -1,3 +1,5 @@
+import { AppointmentStatus } from "@/generated/prisma/enums";
+
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -25,6 +27,7 @@ export async function getDayAgenda(
       priceCents: true,
       currency: true,
       durationMinutes: true,
+      employeeId: true,
       customerNotes: true,
       cancellationReason: true,
       customer: {
@@ -62,3 +65,44 @@ export async function getBusinessSchedule(businessId: string, dayOfWeek: number)
 }
 
 export type DayAppointment = Awaited<ReturnType<typeof getDayAgenda>>[number];
+
+/**
+ * Próximos turnos con horario ocupado, para el dashboard. Solo estados activos:
+ * un turno cancelado o ausente no debe aparecer como compromiso futuro.
+ */
+export async function getUpcomingAppointments(
+  businessId: string,
+  from: Date,
+  take = 8,
+) {
+  return prisma.appointment.findMany({
+    where: {
+      businessId,
+      startsAt: { gte: from },
+      status: {
+        in: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED],
+      },
+    },
+    select: {
+      id: true,
+      startsAt: true,
+      status: true,
+      priceCents: true,
+      currency: true,
+      customer: {
+        select: { firstName: true, lastName: true },
+      },
+      employee: {
+        select: {
+          firstName: true,
+          lastName: true,
+          displayName: true,
+          color: true,
+        },
+      },
+      service: { select: { name: true } },
+    },
+    orderBy: [{ startsAt: "asc" }, { createdAt: "asc" }],
+    take,
+  });
+}
