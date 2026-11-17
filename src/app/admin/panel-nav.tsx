@@ -30,7 +30,7 @@ const items: NavItem[] = [
   { href: "/admin/equipo", label: "Equipo", icon: Users },
   { href: "/admin/horarios", label: "Horarios", icon: Clock },
   { href: "/admin/clientes", label: "Clientes", icon: UserRound },
-  { href: null, label: "Configuración", icon: Settings },
+  { href: "/admin/configuracion", label: "Configuración", icon: Settings },
 ];
 
 export function PanelNav() {

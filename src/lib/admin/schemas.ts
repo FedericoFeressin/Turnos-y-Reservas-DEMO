@@ -332,3 +332,178 @@ export function readTimeOffForm(formData: FormData): TimeOffFormValues {
     reason: text(formData, "reason"),
   };
 }
+
+/* ------------------------------------------------------- configuración */
+
+function optionalPhone(label: string) {
+  return z
+    .string()
+    .trim()
+    .refine(
+      (value) => value === "" || phonePattern.test(value),
+      `Revisá ${label}.`,
+    );
+}
+
+function isValidUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function isValidTimezone(value: string): boolean {
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: value });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Datos públicos y operativos del negocio. */
+export const businessProfileSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, "El nombre es obligatorio.")
+    .max(80, "Máximo 80 caracteres."),
+  legalName: z.string().trim().max(120, "Máximo 120 caracteres."),
+  taxId: z.string().trim().max(30, "Máximo 30 caracteres."),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .max(120, "Máximo 120 caracteres.")
+    .refine(
+      (value) => value === "" || z.email().safeParse(value).success,
+      "Revisá el email.",
+    ),
+  phone: optionalPhone("el teléfono"),
+  whatsapp: optionalPhone("el WhatsApp"),
+  instagram: z
+    .string()
+    .trim()
+    .max(60, "Máximo 60 caracteres.")
+    .transform((value) => value.replace(/^@+/, "").trim())
+    .refine(
+      (value) => value === "" || /^[A-Za-z0-9._]{1,30}$/.test(value),
+      "Usá solo letras, números, puntos y guiones bajos.",
+    ),
+  website: z
+    .string()
+    .trim()
+    .max(200, "Máximo 200 caracteres.")
+    .transform((value) =>
+      value && !/^https?:\/\//i.test(value) ? `https://${value}` : value,
+    )
+    .refine(
+      (value) => value === "" || isValidUrl(value),
+      "Revisá la dirección web.",
+    ),
+  addressLine: z.string().trim().max(120, "Máximo 120 caracteres."),
+  city: z.string().trim().max(80, "Máximo 80 caracteres."),
+  province: z.string().trim().max(80, "Máximo 80 caracteres."),
+  postalCode: z.string().trim().max(12, "Máximo 12 caracteres."),
+  country: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(/^[A-Z]{2}$/, "Usá el código de dos letras del país."),
+  timezone: z
+    .string()
+    .trim()
+    .min(1, "Elegí una zona horaria.")
+    .refine(isValidTimezone, "Esa zona horaria no es válida."),
+  currency: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(/^[A-Z]{3}$/, "Usá el código de tres letras de la moneda."),
+});
+
+/** Horario general de atención: franja semanal del negocio. */
+export const businessScheduleSchema = z
+  .object({
+    dayOfWeek: z
+      .string()
+      .regex(/^[1-7]$/, "Elegí un día de la semana.")
+      .transform(Number),
+    start: z.string().trim().regex(timePattern, "Usá un horario válido (HH:mm)."),
+    end: z.string().trim().regex(timePattern, "Usá un horario válido (HH:mm)."),
+  })
+  .refine((value) => timeToMinutes(value.end) > timeToMinutes(value.start), {
+    message: "El horario de fin debe ser posterior al de inicio.",
+    path: ["end"],
+  });
+
+/** Feriado o cierre puntual del negocio. */
+export const holidaySchema = z.object({
+  date: z
+    .string()
+    .trim()
+    .refine(isValidDateKeyInput, "Elegí una fecha válida."),
+  name: z
+    .string()
+    .trim()
+    .min(2, "El nombre es obligatorio.")
+    .max(80, "Máximo 80 caracteres."),
+  isClosed: z.boolean(),
+  notes: z.string().trim().max(300, "Máximo 300 caracteres."),
+});
+
+export type BusinessProfileInput = z.output<typeof businessProfileSchema>;
+export type BusinessProfileFormValues = z.input<typeof businessProfileSchema>;
+export type BusinessScheduleFormValues = z.input<typeof businessScheduleSchema>;
+export type HolidayFormValues = z.input<typeof holidaySchema>;
+
+export type BusinessProfileFieldErrors = Partial<
+  Record<keyof BusinessProfileFormValues, string>
+>;
+
+export type BusinessProfileFormState = {
+  error: string | null;
+  fieldErrors: BusinessProfileFieldErrors;
+  values: BusinessProfileFormValues | null;
+};
+
+export function readBusinessForm(formData: FormData): BusinessProfileFormValues {
+  return {
+    name: text(formData, "name"),
+    legalName: text(formData, "legalName"),
+    taxId: text(formData, "taxId"),
+    email: text(formData, "email"),
+    phone: text(formData, "phone"),
+    whatsapp: text(formData, "whatsapp"),
+    instagram: text(formData, "instagram"),
+    website: text(formData, "website"),
+    addressLine: text(formData, "addressLine"),
+    city: text(formData, "city"),
+    province: text(formData, "province"),
+    postalCode: text(formData, "postalCode"),
+    country: text(formData, "country"),
+    timezone: text(formData, "timezone"),
+    currency: text(formData, "currency"),
+  };
+}
+
+export function readBusinessScheduleForm(
+  formData: FormData,
+): BusinessScheduleFormValues {
+  return {
+    dayOfWeek: text(formData, "dayOfWeek"),
+    start: text(formData, "start"),
+    end: text(formData, "end"),
+  };
+}
+
+export function readHolidayForm(formData: FormData): HolidayFormValues {
+  return {
+    date: text(formData, "date"),
+    name: text(formData, "name"),
+    isClosed: checked(formData, "isClosed"),
+    notes: text(formData, "notes"),
+  };
+}

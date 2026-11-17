@@ -198,3 +198,37 @@ export type ScheduleEmployee = Awaited<
   ReturnType<typeof listScheduleBoard>
 >[number];
 export type TimeOffRow = Awaited<ReturnType<typeof listTimeOff>>[number];
+
+/** Horario general de atención del negocio, ordenado por día y hora. */
+export async function listBusinessSchedule(businessId: string) {
+  return prisma.businessSchedule.findMany({
+    where: { businessId },
+    select: {
+      id: true,
+      dayOfWeek: true,
+      startMinute: true,
+      endMinute: true,
+    },
+    orderBy: [{ dayOfWeek: "asc" }, { startMinute: "asc" }],
+  });
+}
+
+/** Feriados y cierres del negocio, del más próximo al más lejano. */
+export async function listHolidays(businessId: string) {
+  return prisma.holiday.findMany({
+    where: { businessId },
+    select: {
+      id: true,
+      date: true,
+      name: true,
+      isClosed: true,
+      notes: true,
+    },
+    orderBy: { date: "asc" },
+  });
+}
+
+export type BusinessScheduleRow = Awaited<
+  ReturnType<typeof listBusinessSchedule>
+>[number];
+export type HolidayRow = Awaited<ReturnType<typeof listHolidays>>[number];
