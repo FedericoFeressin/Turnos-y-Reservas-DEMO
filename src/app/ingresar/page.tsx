@@ -34,6 +34,12 @@ export default async function SignInPage({
         >
           Booking System
         </Link>
+        <Link
+          href="/"
+          className="mt-2 inline-flex items-center gap-1 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+        >
+          ← Volver al inicio
+        </Link>
 
         <h1 className="mt-8 font-display text-3xl leading-tight font-semibold tracking-[var(--theme-tracking-display)]">
           Panel del negocio

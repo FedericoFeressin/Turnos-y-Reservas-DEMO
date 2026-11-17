@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { Phone, Scissors } from "lucide-react";
+import { House, Phone, Scissors } from "lucide-react";
 
 import { getPublicBusiness } from "@/lib/booking/public";
 
@@ -62,17 +62,28 @@ export default async function PublicBookingLayout({
             </span>
           </Link>
 
-          {phoneDigits ? (
-            <a
-              href={`https://wa.me/${phoneDigits}`}
-              target="_blank"
-              rel="noreferrer"
+          <div className="flex items-center gap-1">
+            <Link
+              href="/"
+              aria-label="Volver al inicio"
               className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-[13px] text-ink transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
-              <Phone className="size-4 text-ink-muted" strokeWidth={1.75} />
-              <span className="hidden sm:inline">Consultanos</span>
-            </a>
-          ) : null}
+              <House className="size-4 text-ink-muted" strokeWidth={1.75} />
+              <span className="hidden sm:inline">Inicio</span>
+            </Link>
+
+            {phoneDigits ? (
+              <a
+                href={`https://wa.me/${phoneDigits}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-[13px] text-ink transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
+                <Phone className="size-4 text-ink-muted" strokeWidth={1.75} />
+                <span className="hidden sm:inline">Consultanos</span>
+              </a>
+            ) : null}
+          </div>
         </div>
       </header>
 

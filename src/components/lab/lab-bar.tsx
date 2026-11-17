@@ -26,6 +26,12 @@ export function LabBar({ current }: { current: ConceptId }) {
       <div className="mx-auto flex max-w-7xl flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center sm:gap-4">
         <div className="flex items-center gap-2 overflow-x-auto">
           <Link
+            href="/"
+            className="shrink-0 rounded-md border border-white/15 px-2 py-1 text-[11px] hover:bg-white/10"
+          >
+            Inicio
+          </Link>
+          <Link
             href="/lab"
             className="shrink-0 rounded-md border border-white/15 px-2 py-1 text-[11px] hover:bg-white/10"
           >

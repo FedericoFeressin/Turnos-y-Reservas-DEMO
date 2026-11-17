@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { House } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { getBusinessContext } from "@/lib/business";
@@ -73,6 +75,15 @@ export default async function AdminLayout({
           </div>
 
           <div className="flex items-center gap-3">
+            <Link
+              href="/"
+              aria-label="Volver al inicio"
+              className="inline-flex items-center gap-2 rounded-md px-2.5 py-2 text-[13px] font-medium text-ink transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              <House className="size-4 text-ink-muted" strokeWidth={1.9} />
+              <span className="hidden sm:inline">Inicio</span>
+            </Link>
+
             <div className="text-right">
               <p className="text-[13px] leading-tight font-medium text-ink">
                 {session.user.name}
