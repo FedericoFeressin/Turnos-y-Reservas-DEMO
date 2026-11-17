@@ -14,8 +14,13 @@ export function canManage(role: MembershipRole): boolean {
   return role === "OWNER" || role === "ADMIN";
 }
 
-export async function requireManager() {
-  const { membership } = await getBusinessContext();
+/**
+ * Versión completa del guarda, para acciones que necesitan el usuario actor
+ * además del negocio (por ejemplo, al registrar un evento del turno).
+ */
+export async function requireManagerContext() {
+  const context = await getBusinessContext();
+  const membership = context.membership;
 
   if (!membership) {
     redirect("/ingresar?next=/admin");
@@ -25,5 +30,10 @@ export async function requireManager() {
     redirect("/admin?error=permiso");
   }
 
+  return { session: context.session, membership };
+}
+
+export async function requireManager() {
+  const { membership } = await requireManagerContext();
   return membership;
 }
