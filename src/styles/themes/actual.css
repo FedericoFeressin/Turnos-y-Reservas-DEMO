@@ -1,0 +1,69 @@
+/*
+ * Tema Actual · identidad de la home
+ *
+ * Alcance exclusivo de la portada: se activa con data-theme="actual" en el
+ * wrapper de src/app/page.tsx. El resto de la aplicación sigue usando Papel
+ * (:root), que permanece intacto como tema base del producto.
+ *
+ * Contrastes verificados (WCAG AA):
+ *   ink / bg            17.46
+ *   ink-muted / bg       7.07
+ *   ink-muted / surface  7.58
+ *   blanco / primary     6.29
+ *   blanco / accent      5.47
+ *   hero-ink / hero-bg  > 12
+ *   hero-muted / hero-bg > 10
+ */
+[data-theme="actual"] {
+  --theme-font-display: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --theme-font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --theme-bg: #f5f7fb;
+  --theme-surface: #ffffff;
+  --theme-surface-2: #eaf0f9;
+  --theme-ink: #0b1220;
+  --theme-ink-muted: #475569;
+  --theme-line: #d7e0ec;
+  --theme-primary: #4f46e5;
+  --theme-primary-fg: #ffffff;
+  --theme-primary-hover: #4338ca;
+  --theme-accent: #0f766e;
+  --theme-accent-fg: #ffffff;
+  --theme-success: #047857;
+  --theme-warning: #b45309;
+  --theme-danger: #be123c;
+  --theme-danger-fg: #ffffff;
+
+  --theme-radius-sm: 8px;
+  --theme-radius-md: 12px;
+  --theme-radius-lg: 16px;
+  --theme-radius-xl: 24px;
+
+  --theme-shadow-card: 0 12px 32px -20px rgb(15 23 42 / 0.28);
+  --theme-shadow-raised: 0 30px 60px -28px rgb(15 23 42 / 0.45);
+
+  --theme-section-y: clamp(4rem, 9vw, 8rem);
+  --theme-tracking-display: -0.035em;
+
+  /* Bloques oscuros de la portada: hero, demo y pie. */
+  --theme-hero-bg: #0b1220;
+  --theme-hero-surface: #111c2e;
+  --theme-hero-row: #0e1829;
+  --theme-hero-line: rgb(148 163 184 / 0.22);
+  --theme-hero-ink: #f8fafc;
+  --theme-hero-muted: #cbd5e1;
+  --theme-hero-accent: #a5b4fc;
+  --theme-hero-focus: #a5b4fc;
+  --theme-hero-tint: rgb(165 180 252 / 0.14);
+}
+
+/* El body sigue en Papel; solo se alinea el color de rebote en la home. */
+body:has([data-theme="actual"]) {
+  background-color: #f5f7fb;
+}
+
+[data-theme="actual"] .home-glow {
+  background-image:
+    radial-gradient(55% 70% at 85% 5%, rgb(99 102 241 / 0.3), transparent 62%),
+    radial-gradient(45% 60% at 5% 100%, rgb(15 118 110 / 0.28), transparent 65%);
+}

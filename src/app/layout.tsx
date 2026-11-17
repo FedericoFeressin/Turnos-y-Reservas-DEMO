@@ -17,6 +17,7 @@ import "@/styles/themes/noche.css";
 import "@/styles/themes/orbita.css";
 import "@/styles/themes/brisa.css";
 import "@/styles/themes/pulso.css";
+import "@/styles/themes/actual.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const instrumentSerif = Instrument_Serif({
