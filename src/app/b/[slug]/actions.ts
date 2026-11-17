@@ -9,7 +9,9 @@ import {
   Prisma,
 } from "@/generated/prisma/client";
 import { ANY_STAFF, isSlotAvailable, zonedDateTime } from "@/lib/booking/availability";
+import { recordBookingCreated } from "@/lib/booking/records";
 import {
+  bookingCode,
   getAvailabilitySource,
   getPublicBusiness,
 } from "@/lib/booking/public";
@@ -206,28 +208,52 @@ export async function createPublicBookingAction(
 
   for (const employeeId of freeIds) {
     try {
-      const appointment = await prisma.appointment.create({
-        data: {
+      // Turno, evento y outbox se escriben juntos. Si la restricción de
+      // solapamiento falla, la transacción se descarta y probamos el siguiente
+      // profesional de la lista.
+      const appointment = await prisma.$transaction(async (tx) => {
+        const created = await tx.appointment.create({
+          data: {
+            businessId: business.id,
+            customerId: customer.id,
+            employeeId,
+            serviceId: service.id,
+            startsAt,
+            endsAt,
+            blockedUntil,
+            status,
+            source: AppointmentSource.PUBLIC,
+            priceCents: service.priceCents,
+            currency: business.currency,
+            durationMinutes: service.durationMinutes,
+            bufferAfterMinutes: service.bufferAfterMinutes,
+            customerNotes: input.notes || null,
+            clientRequestId: input.clientRequestId,
+            confirmedAt:
+              status === AppointmentStatus.CONFIRMED ? new Date() : null,
+          },
+          select: { id: true, startsAt: true },
+        });
+
+        await recordBookingCreated(tx, {
           businessId: business.id,
-          customerId: customer.id,
-          employeeId,
-          serviceId: service.id,
-          startsAt,
-          endsAt,
-          blockedUntil,
+          appointmentId: created.id,
           status,
-          source: AppointmentSource.PUBLIC,
-          priceCents: service.priceCents,
-          currency: business.currency,
-          durationMinutes: service.durationMinutes,
-          bufferAfterMinutes: service.bufferAfterMinutes,
-          customerNotes: input.notes || null,
-          clientRequestId: input.clientRequestId,
-          confirmedAt:
-            status === AppointmentStatus.CONFIRMED ? new Date() : null,
-        },
-        select: { id: true },
+          note: "Reserva creada desde el sitio público",
+          email: input.email || null,
+          phone: phoneNormalized,
+          payload: {
+            appointmentId: created.id,
+            code: bookingCode({ id: created.id, startsAt: created.startsAt }),
+            startsAt: created.startsAt.toISOString(),
+            serviceName: service.name,
+            businessName: business.name,
+          },
+        });
+
+        return created;
       });
+
       createdId = appointment.id;
       break;
     } catch (error) {
