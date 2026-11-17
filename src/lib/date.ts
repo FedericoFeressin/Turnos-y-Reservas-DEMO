@@ -58,6 +58,14 @@ export function formatPrice(cents: number, currency: string, locale = "es-AR"): 
   }).format(cents / 100);
 }
 
+/** Duración legible para el cliente: `45 min`, `1 h`, `1 h 30 min`. */
+export function formatDurationMinutes(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  if (hours === 0) return `${rest} min`;
+  return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`;
+}
+
 /** Minutos desde medianoche → `HH:mm`. */
 export function minutesToTime(minutes: number): string {
   const hours = Math.floor(minutes / 60);
