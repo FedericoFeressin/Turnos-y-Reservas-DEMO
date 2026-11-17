@@ -1,7 +1,7 @@
 # Booking System — Documentación
 
 Plantilla comercializable de gestión de turnos y reservas.
-Estado actual: **Etapas 0, 1, 2 y 3 completas** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña), un **panel con la agenda real**, el **CRUD de servicios, equipo y clientes**, **horarios y ausencias** y la **configuración del negocio**. La **Etapa 4 está en curso**: ya funciona el flujo público de reserva en `/b/[slug]`, sin cuentas de cliente; faltan la cancelación por token, el historial y el outbox. La **Etapa 5 también está en curso**: ya se pueden confirmar, cancelar, completar y marcar como ausentes los turnos desde `/admin`; siguen el alta manual, la vista semana y el dashboard.
+Estado actual: **Etapas 0, 1, 2 y 3 completas** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña), un **panel con la agenda real**, el **CRUD de servicios, equipo y clientes**, **horarios y ausencias** y la **configuración del negocio**. La **Etapa 4 está en curso**: ya funciona el flujo público de reserva en `/b/[slug]`, sin cuentas de cliente; faltan la cancelación por token, el historial y el outbox. La **Etapa 5 también está en curso**: `/admin` ya es el panel con KPIs semanales y próximos turnos, y `/admin/turnos` permite confirmar, cancelar, completar y marcar como ausentes los turnos; siguen el alta manual y la vista semana.
 
 Laboratorio visual: `pnpm dev` → <http://localhost:3000/lab>
 Panel protegido: `pnpm dev` → <http://localhost:3000/admin> (redirige a `/ingresar`)
@@ -27,6 +27,7 @@ Reserva pública: `pnpm dev` → <http://localhost:3000/b/estudio-norte>
 | Disponibilidad real | ✅ anticipación mínima, franjas por profesional, ausencias, feriados y rangos ocupados |
 | Zona horaria | ✅ la sesión de PostgreSQL se fija en UTC; un turno elegido a las 12:00 local se guarda como 15:00Z y vuelve a leerse a las 12:00 |
 | Acciones de turno | ✅ confirmar/cancelar/completar/marcar ausente con transiciones válidas, permisos por rol y evento en `AppointmentEvent` |
+| Dashboard | ✅ KPIs de la semana, próximos turnos y carga por profesional, con navegación semanal |
 | Contraste AA por tokens | ✅ 14 pares × 5 conceptos sin fallas |
 | Node | 24.22.3 (instalado en `~/.local/opt/node`) |
 | pnpm | 12.21.0 |
@@ -215,32 +216,51 @@ Solo para desarrollo local. En producción se cambia al aprovisionar la instanci
 
 ## Panel
 
-`/admin` es la agenda del negocio, con navegación por fecha y acciones de estado sobre cada turno.
+| Ruta | Contenido |
+|---|---|
+| `/admin` | Panel: resumen de la semana y próximos turnos |
+| `/admin/turnos` | Agenda del día con acciones de estado |
 
 | Pieza | Archivo |
 |---|---|
 | Shell del panel | `src/app/admin/layout.tsx` |
 | Navegación (server + cliente) | `src/app/admin/panel-nav.tsx` |
-| Agenda del día y botones de acción | `src/app/admin/page.tsx` |
+| Dashboard | `src/app/admin/page.tsx` |
+| Agenda del día y botones de acción | `src/app/admin/turnos/page.tsx` |
 | Server Action de cambio de estado | `src/app/admin/turnos/actions.ts` |
 | Transiciones y esquemas de turno | `src/lib/admin/appointments.ts` |
 | Contexto de sesión y membresía | `src/lib/business.ts` |
 | Guardas de escritura | `src/lib/admin/guard.ts` |
-| Consultas de agenda | `src/lib/booking/queries.ts` |
+| Consultas del panel y de agenda | `src/lib/admin/queries.ts`, `src/lib/booking/queries.ts` |
 | Helpers de fecha y precio | `src/lib/date.ts` |
 | Etiquetas y tonos de estado | `src/lib/appointments.ts` |
 
-Comportamiento:
+Comportamiento común:
 
 1. El layout valida sesión y membresía activa una sola vez con `getBusinessContext` (memoizado por request con `cache`). Sin negocio muestra un estado con cierre de sesión.
-2. La agenda toma `?fecha=yyyy-MM-dd`; si falta o es inválida, usa la fecha de hoy en la zona horaria del negocio.
-3. El rango del día se calcula con `dayBounds` y todos los turnos se filtran por `businessId` (frontera del tenant).
-4. Se muestran KPIs (turnos sin cancelar, confirmados, pendientes y facturación estimada) y el listado con horario, cliente, servicio, profesional y estado.
-5. Estados del día: `feriado` (cierre por feriado), `cerrado` (sin horario cargado), `sin turnos` (día abierto sin reservas) y listado normal. Los turnos cancelados se muestran atenuados, no se ocultan.
-6. La navegación permite ir al día anterior, al siguiente y volver a hoy.
-7. Cada turno muestra solo las acciones válidas para su estado. La cancelación acepta un motivo opcional (200 caracteres), que se guarda en el turno y en el evento.
+2. Ambas pantallas aceptan `?fecha=yyyy-MM-dd`; si falta o es inválida, usan la fecha de hoy en la zona horaria del negocio.
+3. Los rangos se calculan con `dayBounds` / `weekBounds` y todos los turnos se filtran por `businessId` (frontera del tenant).
 
-### Acciones de turno
+### Dashboard
+
+`/admin` resume la semana que contiene `?fecha=` (lunes a domingo, en la zona del negocio):
+
+- **KPIs:** turnos activos (sin cancelados), pendientes, confirmados y facturación estimada (excluye cancelados y ausentes).
+- **Próximos turnos:** hasta 8 turnos `PENDING`/`CONFIRMED` desde el momento actual, con fecha, hora, cliente, servicio, profesional, estado e importe. Cada fecha enlaza con la agenda de ese día.
+- **Carga por profesional:** turnos activos de la semana por profesional, con barras relativas al profesional con más turnos.
+- **Estado de la agenda:** desglose de los cinco estados dentro de la misma semana.
+- **Navegación:** semana anterior, siguiente y vuelta a la actual, más un acceso directo a la agenda.
+
+Estados vacíos: si no hay próximos turnos se muestra "Agenda despejada"; si nadie tiene turnos activos en la semana, la carga por profesional lo indica. Los totales salen del snapshot del turno, no del catálogo actual.
+
+### Agenda y acciones de turno
+
+En `/admin/turnos`:
+
+1. El rango del día se calcula con `dayBounds` y el listado muestra horario, cliente, servicio, profesional y estado.
+2. Estados del día: `feriado` (cierre por feriado), `cerrado` (sin horario cargado), `sin turnos` (día abierto sin reservas) y listado normal. Los turnos cancelados se muestran atenuados, no se ocultan.
+3. La navegación permite ir al día anterior, al siguiente y volver a hoy.
+4. Cada turno muestra solo las acciones válidas para su estado. La cancelación acepta un motivo opcional (200 caracteres), que se guarda en el turno y en el evento.
 
 | Estado | Acciones permitidas |
 |---|---|
@@ -255,9 +275,9 @@ Reglas:
 3. **Frontera del tenant.** El turno se busca por `{ id, businessId }`. Un id de otro negocio devuelve `error=turno`; un intent inválido o un salto de estado devuelve `error=transicion`.
 4. **Historial.** Cada cambio escribe un `AppointmentEvent` con `actorType: STAFF` y `actorUserId` de la sesión, más `fromStatus` y `toStatus`. La cancelación guarda el motivo tanto en `cancellationReason` como en la nota del evento.
 5. **Timestamps.** Confirmar completa `confirmedAt`, cancelar completa `cancelledAt` y completar completa `completedAt`. El evento y el turno se escriben en la misma transacción.
-6. **Feedback.** El action revalida `/admin` y redirige con `ok=<accion>` o un código de error; la agenda muestra un banner accesible (`role="status"` / `role="alert"`).
+6. **Feedback.** El action revalida `/admin` y `/admin/turnos`, y redirige con `ok=<accion>` o un código de error; la agenda muestra un banner accesible (`role="status"` / `role="alert"`).
 
-Sigue pendiente en el panel: alta manual de turnos, vista semana y dashboard. La reserva pública ya escribe en la misma tabla.
+Sigue pendiente en el panel: alta manual de turnos y vista semana. La reserva pública ya escribe en la misma tabla.
 
 ## Catálogo: servicios y equipo
 
