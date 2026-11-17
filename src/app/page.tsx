@@ -111,10 +111,7 @@ const heroButtonClass =
 
 export default function Home() {
   return (
-    <div
-      data-theme="actual"
-      className="flex min-h-dvh flex-col bg-background text-ink"
-    >
+    <div className="flex min-h-dvh flex-col bg-background text-ink">
       <a
         href="#contenido"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-lg focus:bg-ink focus:px-4 focus:py-2 focus:text-sm focus:text-background"

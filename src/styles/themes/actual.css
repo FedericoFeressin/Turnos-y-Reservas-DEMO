@@ -1,9 +1,10 @@
 /*
- * Tema Actual · identidad de la home
+ * Tema Actual · identidad del producto
  *
- * Alcance exclusivo de la portada: se activa con data-theme="actual" en el
- * wrapper de src/app/page.tsx. El resto de la aplicación sigue usando Papel
- * (:root), que permanece intacto como tema base del producto.
+ * Se activa en <body> desde src/app/layout.tsx, así cubre todas las pantallas
+ * del producto (home, reserva, panel e ingreso). Papel sigue en :root como
+ * tema base de referencia y los cinco conceptos del laboratorio mantienen su
+ * propio data-theme, que gana dentro de su subárbol.
  *
  * Contrastes verificados (WCAG AA):
  *   ink / bg            17.46
@@ -55,11 +56,6 @@
   --theme-hero-accent: #a5b4fc;
   --theme-hero-focus: #a5b4fc;
   --theme-hero-tint: rgb(165 180 252 / 0.14);
-}
-
-/* El body sigue en Papel; solo se alinea el color de rebote en la home. */
-body:has([data-theme="actual"]) {
-  background-color: #f5f7fb;
 }
 
 [data-theme="actual"] .home-glow {

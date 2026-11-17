@@ -81,7 +81,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f5f6f8",
+  themeColor: "#f5f7fb",
   width: "device-width",
   initialScale: 1,
 };
@@ -91,7 +91,9 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="es-AR" className={fontVariables}>
-      <body className="min-h-dvh antialiased">{children}</body>
+      <body data-theme="actual" className="min-h-dvh antialiased">
+        {children}
+      </body>
     </html>
   );
 }
