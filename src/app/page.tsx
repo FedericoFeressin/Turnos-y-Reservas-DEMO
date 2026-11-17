@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
-import { Container, Section, SectionHead } from "@/components/site/layout-primitives";
+import { Container, Section } from "@/components/site/layout-primitives";
 
 export const metadata: Metadata = {
   title: "Turnos y reservas para negocios de servicios",
@@ -41,7 +41,7 @@ const modules: {
     index: "02",
     title: "Panel de administración",
     description:
-      "Acceso con Better Auth, memberships por negocio y lectura o escritura según el rol de cada usuario.",
+      "Ingreso con Better Auth, memberships por negocio y permisos reales según el rol de cada usuario.",
     href: "/ingresar",
     action: "Ingresar",
     icon: LayoutDashboard,
@@ -85,69 +85,70 @@ const modules: {
 ];
 
 const navLinkClass =
-  "rounded-sm px-2 py-1.5 text-ink-muted transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+  "rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 export default function Home() {
   return (
     <div className="flex min-h-dvh flex-col bg-background text-ink">
       <a
         href="#contenido"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-ink focus:px-4 focus:py-2 focus:text-[13px] focus:text-background"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-ink focus:px-4 focus:py-2 focus:text-sm focus:text-background"
       >
         Saltar al contenido
       </a>
 
-      <header className="border-b border-line bg-surface">
+      <header className="sticky top-0 z-30 border-b border-line bg-surface/95 backdrop-blur">
         <Container className="flex h-16 items-center justify-between gap-4">
           <Link
             href="/"
-            className="flex items-center gap-3 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+            className="flex items-center gap-3 rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
           >
             <span
               aria-hidden="true"
               className="grid size-9 place-items-center rounded-md bg-primary text-primary-fg"
             >
-              <Scissors className="size-[18px]" strokeWidth={1.75} />
+              <Scissors className="size-5" strokeWidth={1.75} />
             </span>
-            <span>
-              <span className="block font-display text-lg leading-none font-semibold tracking-[var(--theme-tracking-display)]">
-                Booking System
-              </span>
-              <span className="mt-1 block text-[10px] font-medium tracking-[0.18em] text-ink-muted uppercase">
+            <span className="text-base leading-tight font-semibold tracking-tight">
+              Booking System
+              <span className="block text-[11px] font-medium text-ink-muted">
                 Turnos y reservas
               </span>
             </span>
           </Link>
 
-          <nav aria-label="Navegación principal" className="flex items-center gap-1 text-[13px]">
+          <nav aria-label="Navegación principal" className="flex items-center gap-1">
+            <Link href="#modulos" className={navLinkClass}>
+              Módulos
+            </Link>
             <Link href="/b/estudio-norte" className={navLinkClass}>
               Demo
             </Link>
-            <Link href="/ingresar" className={navLinkClass}>
+            <Link
+              href="/ingresar"
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
               Panel
-            </Link>
-            <Link href="/lab" className={navLinkClass}>
-              Laboratorio
             </Link>
           </nav>
         </Container>
       </header>
 
       <main id="contenido" className="flex-1">
-        <section className="border-b border-line">
-          <Container className="py-16 sm:py-24">
-            <p className="font-mono text-[11px] tracking-[0.22em] text-ink-muted uppercase">
-              Etapas 0–6 completas · tema Papel
-            </p>
+        <section className="border-b border-line bg-surface-2/40">
+          <Container className="py-20 sm:py-28">
+            <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-ink">
+              <span className="size-2 rounded-full bg-primary" aria-hidden="true" />
+              Etapas 0–6 completas
+            </span>
 
-            <h1 className="mt-6 max-w-3xl font-display text-[3rem] leading-[1.02] font-normal tracking-[var(--theme-tracking-display)] sm:text-6xl">
-              Reservas claras, agenda ordenada, clientes que vuelven.
+            <h1 className="mt-7 max-w-4xl font-sans text-4xl leading-[1.08] font-semibold tracking-[-0.04em] sm:text-6xl lg:text-7xl">
+              Turnos que se reservan solos. Negocios que no pierden tiempo.
             </h1>
 
-            <p className="mt-6 max-w-xl text-[15px] leading-[1.75] text-ink-muted sm:text-base">
-              Plantilla comercializable para negocios de servicios. La reserva
-              online funciona sin cuentas de cliente, con disponibilidad real,
-              panel por roles, historial de turnos y notificaciones encoladas.
+            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink sm:text-xl">
+              Plantilla de turnos y reservas con flujo público sin cuentas,
+              disponibilidad real, panel por roles e historial de cada turno.
             </p>
 
             <div className="mt-9 flex flex-wrap items-center gap-3">
@@ -160,16 +161,18 @@ export default function Home() {
               </Link>
             </div>
 
-            <dl className="mt-14 grid max-w-2xl grid-cols-2 gap-x-6 gap-y-5 border-t border-line pt-6 sm:grid-cols-4">
+            <dl className="mt-16 grid max-w-3xl grid-cols-2 gap-x-6 gap-y-6 border-t border-line pt-7 sm:grid-cols-4">
               {[
-                { label: "Módulos", value: "06" },
+                { label: "Módulos listos", value: "06" },
                 { label: "Pruebas E2E", value: "10" },
                 { label: "Temas visuales", value: "05" },
                 { label: "Cuentas de cliente", value: "00" },
               ].map((item) => (
                 <div key={item.label}>
-                  <dd className="font-display text-2xl">{item.value}</dd>
-                  <dt className="mt-0.5 text-[11px] tracking-[0.14em] text-ink-muted uppercase">
+                  <dd className="font-sans text-3xl font-semibold tracking-tight text-ink">
+                    {item.value}
+                  </dd>
+                  <dt className="mt-1 text-xs font-medium tracking-wide text-ink-muted uppercase">
                     {item.label}
                   </dt>
                 </div>
@@ -179,38 +182,48 @@ export default function Home() {
         </section>
 
         <Section id="modulos">
-          <SectionHead
-            index="01 — Producto"
-            title="Lo que ya funciona."
-            description="Cada módulo está conectado a la misma base y respeta el negocio y el rol de quien lo usa."
-          />
+          <div className="mb-10 max-w-2xl">
+            <p className="text-sm font-semibold text-primary">Producto</p>
+            <h2 className="mt-2 font-sans text-3xl leading-tight font-semibold tracking-[-0.03em] text-ink sm:text-4xl">
+              Todo lo que ya funciona.
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-ink">
+              Cada pantalla usa la misma base y respeta el negocio y el rol de
+              quien la abre.
+            </p>
+          </div>
 
-          <div className="grid gap-px overflow-hidden rounded-md border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {modules.map((module) => {
               const Icon = module.icon;
 
               return (
-                <article key={module.index} className="flex flex-col bg-surface p-6">
-                  <div className="flex items-start justify-between">
-                    <span className="grid size-10 place-items-center rounded-md bg-surface-2 text-primary">
-                      <Icon className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />
+                <article
+                  key={module.index}
+                  className="flex flex-col rounded-xl border border-line bg-surface p-6 shadow-card transition-colors hover:border-primary"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="grid size-11 place-items-center rounded-lg bg-primary/10 text-primary">
+                      <Icon className="size-5" strokeWidth={1.9} aria-hidden="true" />
                     </span>
-                    <span className="font-mono text-[11px] text-ink-muted">{module.index}</span>
+                    <span className="text-xs font-semibold text-ink-muted">
+                      {module.index}
+                    </span>
                   </div>
 
-                  <h3 className="mt-5 font-display text-[19px] leading-snug font-semibold">
+                  <h3 className="mt-6 font-sans text-lg leading-snug font-semibold text-ink">
                     {module.title}
                   </h3>
-                  <p className="mt-2 flex-1 text-[13px] leading-relaxed text-ink-muted">
+                  <p className="mt-2 flex-1 text-sm leading-7 text-ink">
                     {module.description}
                   </p>
 
                   <Link
                     href={module.href}
-                    className="mt-5 inline-flex items-center gap-1.5 text-[13px] font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                   >
                     {module.action}
-                    <ArrowRight className="size-3.5" aria-hidden="true" />
+                    <ArrowRight className="size-4" aria-hidden="true" />
                   </Link>
                 </article>
               );
@@ -222,50 +235,32 @@ export default function Home() {
           <Section>
             <div className="flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-end">
               <div className="max-w-2xl">
-                <p className="text-[11px] font-medium tracking-[0.2em] text-ink-muted uppercase">
-                  Demo en vivo
-                </p>
-                <h2 className="mt-3 font-display text-3xl leading-[1.15] font-semibold tracking-[var(--theme-tracking-display)] sm:text-4xl">
+                <p className="text-sm font-semibold text-primary">Demo en vivo</p>
+                <h2 className="mt-2 font-sans text-3xl leading-tight font-semibold tracking-[-0.03em] text-ink sm:text-4xl">
                   Estudio Norte, de punta a punta.
                 </h2>
-                <p className="mt-3 text-sm leading-relaxed text-ink-muted sm:text-[15px]">
+                <p className="mt-4 text-base leading-relaxed text-ink">
                   Elegí un turno como cliente, confirmalo desde el panel y
                   cancelalo con el enlace firmado. Los datos vuelven a su estado
                   original después de cada prueba.
                 </p>
               </div>
-              <Link
-                href="/b/estudio-norte"
-                className={buttonVariants({ size: "lg" })}
-              >
+              <Link href="/b/estudio-norte" className={buttonVariants({ size: "lg" })}>
                 Abrir la demo
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </div>
           </Section>
         </div>
-
-        <Section id="diseno">
-          <SectionHead
-            index="02 — Diseño"
-            title="Papel es la identidad del producto."
-            description="Los otros cuatro conceptos quedan como presets del mismo sistema de tokens. Podés recorrerlos en el laboratorio visual."
-          />
-          <Link
-            href="/lab"
-            className="inline-flex items-center gap-2 rounded-md border border-line bg-surface px-5 py-3 text-[13px] font-medium transition-colors hover:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          >
-            Ver el laboratorio visual
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Link>
-        </Section>
       </main>
 
       <footer className="border-t border-line bg-surface">
-        <Container className="flex flex-col gap-3 py-6 text-[12px] text-ink-muted sm:flex-row sm:items-center sm:justify-between">
-          <p>Booking System · plantilla de turnos y reservas</p>
+        <Container className="flex flex-col gap-3 py-7 text-sm text-ink sm:flex-row sm:items-center sm:justify-between">
+          <p className="font-medium">Booking System · plantilla de turnos y reservas</p>
           <p>
-            Panel de demo: tomas@estudionorte.com.ar · estudio-norte
+            Panel de demo:{" "}
+            <span className="font-semibold">tomas@estudionorte.com.ar</span> ·{" "}
+            <span className="font-semibold">estudio-norte</span>
           </p>
         </Container>
       </footer>
