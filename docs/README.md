@@ -1,7 +1,7 @@
 # Booking System — Documentación
 
 Plantilla comercializable de gestión de turnos y reservas.
-Estado actual: **Etapas 0, 1, 2 y 3 completas** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña), un **panel con la agenda real**, el **CRUD de servicios, equipo y clientes**, **horarios y ausencias** y la **configuración del negocio**. La **Etapa 4 está completa**: funciona el flujo público de reserva en `/b/[slug]`, sin cuentas de cliente, con cancelación por token firmado, historial de eventos y outbox de notificaciones. La **Etapa 5 está completa**: `/admin` es el panel con KPIs semanales y próximos turnos, `/admin/turnos` permite confirmar, cancelar, completar y marcar como ausentes los turnos en vista día o semana, y `/admin/turnos/nuevo` carga turnos manualmente reutilizando la disponibilidad real.
+Estado actual: **Etapas 0, 1, 2 y 3 completas** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña), un **panel con la agenda real**, el **CRUD de servicios, equipo y clientes**, **horarios y ausencias** y la **configuración del negocio**. La **Etapa 4 está completa**: funciona el flujo público de reserva en `/b/[slug]`, sin cuentas de cliente, con cancelación por token firmado, historial de eventos y outbox de notificaciones. La **Etapa 5 está completa**: `/admin` es el panel con KPIs semanales y próximos turnos, `/admin/turnos` permite confirmar, cancelar, completar y marcar como ausentes los turnos en vista día o semana, y `/admin/turnos/nuevo` carga turnos manualmente reutilizando la disponibilidad real. La **Etapa 6 (QA) está en curso**: el bloque de E2E con Playwright + axe quedó cerrado con 10 pruebas automatizadas en verde.
 
 Laboratorio visual: `pnpm dev` → <http://localhost:3000/lab>
 Panel protegido: `pnpm dev` → <http://localhost:3000/admin> (redirige a `/ingresar`)
@@ -34,6 +34,8 @@ Reserva pública: `pnpm dev` → <http://localhost:3000/b/estudio-norte>
 | Historial del turno | ✅ línea de tiempo visible en la confirmación, con eventos de cliente, personal y sistema |
 | Outbox | ✅ `Notification` encolada en la misma transacción; la cancelación baja las intenciones pendientes |
 | Contraste AA por tokens | ✅ 14 pares × 5 conceptos sin fallas |
+| E2E (Playwright) | ✅ 10 pruebas en verde: reserva móvil, concurrencia, autorización, historial y accesibilidad |
+| Accesibilidad automatizada (axe) | ✅ WCAG 2.0/2.1 A + AA sin violaciones en home, asistente, confirmación e ingreso |
 | Node | 24.22.3 (instalado en `~/.local/opt/node`) |
 | pnpm | 12.21.0 |
 | PostgreSQL | 18.7 (instalado en `~/.local/opt/pgsql`, sin `sudo`) |
@@ -473,6 +475,50 @@ En `/b/[slug]/cancelar/[token]` se repite la validación en servidor antes de es
 7. **Sin proveedor real.** `Notification` persiste la intención: no hay envío de email, SMS ni WhatsApp cableado en este alcance. Un worker futuro puede consumir la cola sin tocar el flujo de reserva.
 
 La Etapa 4 queda así cerrada junto con las Etapas 0, 1, 2, 3 y 5.
+
+## QA automatizado (Etapa 6)
+
+Bloque cerrado: **E2E + axe**. Las dependencias nuevas son solo de desarrollo y
+se agregaron para este bloque: `@playwright/test` (corredor E2E) y
+`@axe-core/playwright` (auditoría de accesibilidad). No se agregaron tablas,
+migraciones ni dependencias de producción.
+
+```bash
+pnpm test:e2e        # 10 pruebas, 1 worker, levanta `pnpm dev` si hace falta
+pnpm typecheck
+pnpm lint
+pnpm build
+```
+
+Cobertura (criterios de aceptación de la Etapa 6):
+
+| Criterio | Prueba |
+|---|---|
+| 1. Reserva de punta a punta a 375 px, sin zoom ni scroll horizontal | `tests/reserva-movil.spec.ts` |
+| 2. Dos reservas simultáneas: una gana, otra con error claro | `tests/concurrencia.spec.ts` |
+| 4. `STAFF` no modifica servicios: sin controles y `POST` rechazado | `tests/autorizacion.spec.ts` |
+| 5. Otro negocio no lee ni modifica datos ajenos | `tests/autorizacion.spec.ts` |
+| 6. Cada transición de turno deja su evento | `tests/historial.spec.ts` |
+| Accesibilidad WCAG 2.0/2.1 A + AA | `tests/accesibilidad.spec.ts` (axe) |
+
+Notas de implementación:
+
+- `tests/support/db.ts`centraliza el cliente Prisma de pruebas, el login, la
+  limpieza por teléfono y los helpers de disponibilidad. Cada prueba siembra y
+  limpia sus propios datos; la base demo queda con 23 turnos y 17 clientes.
+- Los días se eligen desde mañana en adelante para no chocar con
+  `minAdvanceMinutes=120`: hoy, cerca del cierre, los primeros slots ya no son
+  reservables.
+- El replay de Server Actions en `tests/autorizacion.spec.ts` reenvía las
+  cabeceras `next-action` y `next-router-state-tree`. Next 16 responde `200` y
+  codifica el destino del redirect en `x-action-redirect` (no en `location`).
+- El viewport móvil se fija con `viewport: { width: 375, height: 812 }`:
+  `isMobile` + `deviceScaleFactor: 2` distorsionaban el viewport de layout y
+  desalineaban los clics.
+- Los enlaces de día combinan texto visible con detalle en `sr-only` dentro de
+  un contenedor `relative`: el nombre accesible incluye el texto visible (axe)
+  sin desbordar el documento.
+- Queda pendiente para el cierre formal de la Etapa 6: Lighthouse (criterio 8).
 
 ## Convención de commits
 
