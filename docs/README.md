@@ -1,7 +1,7 @@
 # Booking System — Documentación
 
 Plantilla comercializable de gestión de turnos y reservas.
-Estado actual: **Etapas 0, 1, 2 y 3 completas** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña), un **panel con la agenda real**, el **CRUD de servicios, equipo y clientes**, **horarios y ausencias** y la **configuración del negocio**. La **Etapa 4 está en curso**: ya funciona el flujo público de reserva en `/b/[slug]`, sin cuentas de cliente. Siguen pendientes dentro de esa etapa la cancelación, el historial de eventos y el outbox de notificaciones.
+Estado actual: **Etapas 0, 1, 2 y 3 completas** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña), un **panel con la agenda real**, el **CRUD de servicios, equipo y clientes**, **horarios y ausencias** y la **configuración del negocio**. La **Etapa 4 está en curso**: ya funciona el flujo público de reserva en `/b/[slug]`, sin cuentas de cliente; faltan la cancelación por token, el historial y el outbox. La **Etapa 5 también está en curso**: ya se pueden confirmar, cancelar, completar y marcar como ausentes los turnos desde `/admin`; siguen el alta manual, la vista semana y el dashboard.
 
 Laboratorio visual: `pnpm dev` → <http://localhost:3000/lab>
 Panel protegido: `pnpm dev` → <http://localhost:3000/admin> (redirige a `/ingresar`)
@@ -26,6 +26,7 @@ Reserva pública: `pnpm dev` → <http://localhost:3000/b/estudio-norte>
 | Idempotencia | ✅ un `clientRequestId` repetido devuelve el mismo turno, sin duplicados |
 | Disponibilidad real | ✅ anticipación mínima, franjas por profesional, ausencias, feriados y rangos ocupados |
 | Zona horaria | ✅ la sesión de PostgreSQL se fija en UTC; un turno elegido a las 12:00 local se guarda como 15:00Z y vuelve a leerse a las 12:00 |
+| Acciones de turno | ✅ confirmar/cancelar/completar/marcar ausente con transiciones válidas, permisos por rol y evento en `AppointmentEvent` |
 | Contraste AA por tokens | ✅ 14 pares × 5 conceptos sin fallas |
 | Node | 24.22.3 (instalado en `~/.local/opt/node`) |
 | pnpm | 12.21.0 |
@@ -214,14 +215,17 @@ Solo para desarrollo local. En producción se cambia al aprovisionar la instanci
 
 ## Panel
 
-`/admin` es la agenda del negocio, todavía **de solo lectura**.
+`/admin` es la agenda del negocio, con navegación por fecha y acciones de estado sobre cada turno.
 
 | Pieza | Archivo |
 |---|---|
 | Shell del panel | `src/app/admin/layout.tsx` |
 | Navegación (server + cliente) | `src/app/admin/panel-nav.tsx` |
-| Agenda del día | `src/app/admin/page.tsx` |
+| Agenda del día y botones de acción | `src/app/admin/page.tsx` |
+| Server Action de cambio de estado | `src/app/admin/turnos/actions.ts` |
+| Transiciones y esquemas de turno | `src/lib/admin/appointments.ts` |
 | Contexto de sesión y membresía | `src/lib/business.ts` |
+| Guardas de escritura | `src/lib/admin/guard.ts` |
 | Consultas de agenda | `src/lib/booking/queries.ts` |
 | Helpers de fecha y precio | `src/lib/date.ts` |
 | Etiquetas y tonos de estado | `src/lib/appointments.ts` |
@@ -234,8 +238,26 @@ Comportamiento:
 4. Se muestran KPIs (turnos sin cancelar, confirmados, pendientes y facturación estimada) y el listado con horario, cliente, servicio, profesional y estado.
 5. Estados del día: `feriado` (cierre por feriado), `cerrado` (sin horario cargado), `sin turnos` (día abierto sin reservas) y listado normal. Los turnos cancelados se muestran atenuados, no se ocultan.
 6. La navegación permite ir al día anterior, al siguiente y volver a hoy.
+7. Cada turno muestra solo las acciones válidas para su estado. La cancelación acepta un motivo opcional (200 caracteres), que se guarda en el turno y en el evento.
 
-El panel sigue siendo de solo lectura: crear, confirmar o cancelar turnos desde `/admin` llega con el CRUD de la Etapa 5. La reserva pública ya escribe en la misma tabla.
+### Acciones de turno
+
+| Estado | Acciones permitidas |
+|---|---|
+| `PENDING` | Confirmar, Cancelar |
+| `CONFIRMED` | Completar, Cancelar, No asistió |
+| `COMPLETED`, `CANCELLED`, `NO_SHOW` | Ninguna (estados finales) |
+
+Reglas:
+
+1. **Transiciones en un solo lugar.** `allowedTransitions` e `intentOutcome` viven en `src/lib/admin/appointments.ts`; la agenda pinta los botones desde esa misma tabla que valida el Server Action.
+2. **Autorización real.** `requireManagerContext()` exige membresía activa y rol `OWNER` o `ADMIN`. La ausencia de botones no reemplaza la guarda: el `POST` la ejecuta de nuevo.
+3. **Frontera del tenant.** El turno se busca por `{ id, businessId }`. Un id de otro negocio devuelve `error=turno`; un intent inválido o un salto de estado devuelve `error=transicion`.
+4. **Historial.** Cada cambio escribe un `AppointmentEvent` con `actorType: STAFF` y `actorUserId` de la sesión, más `fromStatus` y `toStatus`. La cancelación guarda el motivo tanto en `cancellationReason` como en la nota del evento.
+5. **Timestamps.** Confirmar completa `confirmedAt`, cancelar completa `cancelledAt` y completar completa `completedAt`. El evento y el turno se escriben en la misma transacción.
+6. **Feedback.** El action revalida `/admin` y redirige con `ok=<accion>` o un código de error; la agenda muestra un banner accesible (`role="status"` / `role="alert"`).
+
+Sigue pendiente en el panel: alta manual de turnos, vista semana y dashboard. La reserva pública ya escribe en la misma tabla.
 
 ## Catálogo: servicios y equipo
 
@@ -248,7 +270,7 @@ El panel sigue siendo de solo lectura: crear, confirmar o cancelar turnos desde 
 |---|---|
 | Esquemas Zod y lectura de `FormData` | `src/lib/admin/schemas.ts` |
 | Consultas del panel | `src/lib/admin/queries.ts` |
-| Permisos (`canManage`, `requireManager`) | `src/lib/admin/guard.ts` |
+| Permisos (`canManage`, `requireManager`, `requireManagerContext`) | `src/lib/admin/guard.ts` |
 | Formularios cliente | `src/app/admin/{servicios,equipo}/*-form.tsx` |
 | Server Actions | `src/app/admin/{servicios,equipo}/actions.ts` |
 | Controles de formulario | `src/components/ui/field.tsx` |
