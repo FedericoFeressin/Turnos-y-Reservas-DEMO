@@ -7,6 +7,19 @@ Laboratorio visual: `pnpm dev` → <http://localhost:3000/lab>
 Panel protegido: `pnpm dev` → <http://localhost:3000/admin> (redirige a `/ingresar`)
 Reserva pública: `pnpm dev` → <http://localhost:3000/b/estudio-norte>
 
+## Setup rápido
+
+```bash
+corepack enable
+pnpm install --frozen-lockfile   # postinstall genera el cliente de Prisma
+cp .env.example .env.local       # completar DATABASE_URL y BETTER_AUTH_SECRET
+pnpm db:deploy                   # aplica la migración a una base vacía
+pnpm db:seed                     # datos de demostración
+pnpm dev
+```
+
+El paso a paso completo, las variables de entorno y el despliegue están en el [README raiz](../README.md).
+
 ## Estado verificado
 
 | Comprobación | Resultado |
@@ -14,6 +27,7 @@ Reserva pública: `pnpm dev` → <http://localhost:3000/b/estudio-norte>
 | `pnpm typecheck` | ✅ sin errores |
 | `pnpm lint` | ✅ sin errores |
 | `pnpm build` | ✅ build limpio (laboratorio con 5 temas + panel, ingreso y API de auth) |
+| Clon limpio | ✅ `pnpm install` genera el cliente de Prisma; `typecheck`, `migrate deploy`, `seed` y `build` pasan sobre una base vacía |
 | `pnpm db:seed` | ✅ 23 turnos, 6 servicios, 3 profesionales, 17 clientes, cuenta de acceso |
 | Anti-solapamiento | ✅ `EXCLUDE USING gist` rechaza turnos solapados del mismo profesional |
 | Autenticación | ✅ login, guard de `/admin`, sesión y logout |
@@ -140,7 +154,7 @@ Scripts de `package.json`:
 Prisma 7 cambió la configuración:
 
 - El archivo es **`prisma7.config.ts`** (no `prisma.config.ts`).
-- El generator es `prisma-client` con `output = "../src/generated/prisma"`. El cliente generado **no se versiona** (`/src/generated/prisma` está en `.gitignore`); se regenera con `pnpm exec prisma generate`, que corre automáticamente en `pnpm install` y en cada migración.
+- El generator es `prisma-client` con `output = "../src/generated/prisma"`. El cliente generado **no se versiona** (`/src/generated/prisma` está en `.gitignore`); se regenera con `pnpm exec prisma generate`. El script `postinstall` lo ejecuta automáticamente después de `pnpm install`, y las migraciones también lo regeneran.
 - El cliente exige un **driver adapter**: `@prisma/adapter-pg` sobre `pg`. La conexión se crea así:
 
 ```ts
