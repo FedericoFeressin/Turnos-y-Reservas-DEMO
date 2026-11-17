@@ -457,6 +457,8 @@ Pagos online y señas · WhatsApp · Google Calendar · cupones · reportes avan
 9. La reserva funciona con el servidor en UTC y el negocio en otra zona horaria.
 10. No hay datos hardcodeados de negocio en componentes: todo viene de la base.
 
+> El criterio 8 (Lighthouse) quedó diferido por decisión del cliente: no bloquea el cierre de la Etapa 6.
+
 ---
 
 ## 7. Roadmap
@@ -471,7 +473,7 @@ Estimaciones indicativas asumiendo dedicación parcial (~20 h/semana). No son co
 | **3. MVP núcleo** | Modelo de datos, migraciones, seed, auth, CRUD de servicios/equipo/clientes, configuración | Panel usable con datos reales, en alcance simple (una barbería por instancia) | ✅ cerrada: base, seed, auth, agenda, catálogo, clientes, horarios y configuración |
 | **4. Motor de reservas** | Disponibilidad, flujo público, anti-solapamiento, cancelación, historial, outbox | Criterios de aceptación 1–4 y 6–9 | ✅ cerrada: reserva pública, anti-solapamiento, idempotencia, cancelación por token, historial y outbox verificados |
 | **5. Calendario y dashboard** | Vistas día/semana/lista, creación manual, KPIs, estados vacíos | Un dueño puede operar el día completo desde el panel | ✅ cerrada: dashboard semanal, agenda día/semana, acciones de estado y alta manual verificadas |
-| **6. QA** | Playwright E2E, axe, revisión responsive, pruebas de concurrencia, Lighthouse | Criterios 1–10 verificados | en curso: bloque E2E + axe cerrado (10 pruebas en verde); falta Lighthouse y cierre formal |
+| **6. QA** | Playwright E2E, axe, revisión responsive, pruebas de concurrencia, Lighthouse | Criterios 1–7, 9 y 10 verificados; Lighthouse diferido | ✅ cerrada: E2E + axe con 10 pruebas en verde; Lighthouse diferido por decisión del cliente |
 | **7. Comercial** | Aprovisionamiento scriptado, documentación de despliegue, backup, guía de personalización | Se puede entregar una instancia nueva en < 1 h | 1–2 semanas |
 
 Orden intencional: **el diseño se decide antes de construir la lógica** (Etapa 2), porque cambia la estructura de las pantallas y de los componentes. Pero el modelo de datos se define antes del laboratorio para que los datos de prueba sean realistas.

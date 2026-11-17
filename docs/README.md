@@ -1,7 +1,7 @@
 # Booking System — Documentación
 
 Plantilla comercializable de gestión de turnos y reservas.
-Estado actual: **Etapas 0, 1, 2 y 3 completas** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña), un **panel con la agenda real**, el **CRUD de servicios, equipo y clientes**, **horarios y ausencias** y la **configuración del negocio**. La **Etapa 4 está completa**: funciona el flujo público de reserva en `/b/[slug]`, sin cuentas de cliente, con cancelación por token firmado, historial de eventos y outbox de notificaciones. La **Etapa 5 está completa**: `/admin` es el panel con KPIs semanales y próximos turnos, `/admin/turnos` permite confirmar, cancelar, completar y marcar como ausentes los turnos en vista día o semana, y `/admin/turnos/nuevo` carga turnos manualmente reutilizando la disponibilidad real. La **Etapa 6 (QA) está en curso**: el bloque de E2E con Playwright + axe quedó cerrado con 10 pruebas automatizadas en verde.
+Estado actual: **Etapas 0, 1, 2 y 3 completas** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña), un **panel con la agenda real**, el **CRUD de servicios, equipo y clientes**, **horarios y ausencias** y la **configuración del negocio**. La **Etapa 4 está completa**: funciona el flujo público de reserva en `/b/[slug]`, sin cuentas de cliente, con cancelación por token firmado, historial de eventos y outbox de notificaciones. La **Etapa 5 está completa**: `/admin` es el panel con KPIs semanales y próximos turnos, `/admin/turnos` permite confirmar, cancelar, completar y marcar como ausentes los turnos en vista día o semana, y `/admin/turnos/nuevo` carga turnos manualmente reutilizando la disponibilidad real. La **Etapa 6 (QA) está completa**: el bloque de E2E con Playwright + axe quedó cerrado con 10 pruebas automatizadas en verde. Lighthouse (criterio 8) quedó diferido por decisión del cliente.
 
 Laboratorio visual: `pnpm dev` → <http://localhost:3000/lab>
 Panel protegido: `pnpm dev` → <http://localhost:3000/admin> (redirige a `/ingresar`)
@@ -474,7 +474,7 @@ En `/b/[slug]/cancelar/[token]` se repite la validación en servidor antes de es
 6. **Outbox.** La reserva escribe `CREATED` y una notificación `QUEUED` (`booking.confirmed` o `booking.requested`) en la misma transacción del `INSERT`. La cancelación baja las notificaciones `QUEUED` previas del turno y encola `booking.cancelled`. El destinatario es el email del cliente y, si no hay, el teléfono normalizado por SMS.
 7. **Sin proveedor real.** `Notification` persiste la intención: no hay envío de email, SMS ni WhatsApp cableado en este alcance. Un worker futuro puede consumir la cola sin tocar el flujo de reserva.
 
-La Etapa 4 queda así cerrada junto con las Etapas 0, 1, 2, 3 y 5.
+La Etapa 4 queda así cerrada junto con las Etapas 0 a 6.
 
 ## QA automatizado (Etapa 6)
 
@@ -518,7 +518,7 @@ Notas de implementación:
 - Los enlaces de día combinan texto visible con detalle en `sr-only` dentro de
   un contenedor `relative`: el nombre accesible incluye el texto visible (axe)
   sin desbordar el documento.
-- Queda pendiente para el cierre formal de la Etapa 6: Lighthouse (criterio 8).
+- Lighthouse (criterio 8) quedó diferido por decisión del cliente; no forma parte del cierre de la Etapa 6.
 
 ## Convención de commits
 
