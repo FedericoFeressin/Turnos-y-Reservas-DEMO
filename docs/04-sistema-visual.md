@@ -1,6 +1,6 @@
-# 04 — Sistema visual de Papel
+# 04 — Sistema visual
 
-> Documento de referencia del tema **Papel**, elegido al cerrar la Etapa 2 y convertido en la identidad base del producto. Los otros cuatro conceptos (Noche, Órbita, Brisa y Pulso) quedan como *presets* de `BusinessTheme` y se venden como estilos incluidos.
+> Documento de referencia del sistema de tokens. **Actual** es la identidad del producto y se aplica desde `<body>` a todas las pantallas. **Papel**, elegido al cerrar la Etapa 2, permanece en `:root` como tema base de referencia. Los cinco conceptos del laboratorio (Papel, Noche, Órbita, Brisa y Pulso) siguen como *presets* de `BusinessTheme`.
 >
 > La experimentación que llevó a esta decisión está en [`03-experimentacion-visual.md`](./03-experimentacion-visual.md).
 

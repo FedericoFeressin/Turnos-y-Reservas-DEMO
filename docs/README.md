@@ -59,7 +59,7 @@ Reserva pública: `pnpm dev` → <http://localhost:3000/b/estudio-norte>
 | [01 — Arquitectura y tecnologías](./01-arquitectura-y-tecnologias.md) | Evaluación de la propuesta, comparación de stack, arquitectura, multi-tenant vs instancia única, estructura de carpetas, MVP, roadmap |
 | [02 — Modelo de datos](./02-modelo-de-datos.md) | Esquema Prisma completo, restricciones SQL, índices, disponibilidad, estados, seed |
 | [03 — Sistema visual y experimentación](./03-experimentacion-visual.md) | 5 conceptos visuales con tokens, matriz de decisión, plan de la Etapa 2 y registro de ejecución de las rondas L1 y L2 |
-| [04 — Sistema visual de Papel](./04-sistema-visual.md) | Tokens, paleta, tipografía, componentes, accesibilidad y reglas de uso del tema del producto |
+| [04 — Sistema visual](./04-sistema-visual.md) | Tokens, paleta, tipografía, componentes, accesibilidad y reglas de uso de Actual y Papel |
 
 ## Decisiones tomadas
 
@@ -81,7 +81,7 @@ Reserva pública: `pnpm dev` → <http://localhost:3000/b/estudio-norte>
 | Modalidad comercial | **Híbrido**: código tenant-ready + una instancia y base por cliente |
 | Rubro piloto | **Barbería / peluquería** ("Estudio Norte") |
 | Etapa 2 | **5 conceptos en L1** → ronda L2 sobre **Papel** (elegido para profundizar) → validación final |
-| Tema del producto | **Papel** como `:root`; Noche, Órbita, Brisa y Pulso quedan como presets |
+| Tema del producto | **Actual** en `<body>` para todas las pantallas; Papel sigue en `:root` como base y los cinco conceptos del laboratorio como presets |
 | Email de confirmación | Dentro del MVP, con patrón *outbox* y un canal simple |
 
 ## Requisitos de entorno
