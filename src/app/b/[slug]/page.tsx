@@ -338,6 +338,22 @@ export default async function PublicBookingPage({
               {strip.map((day) => {
                 const selected = day.dateKey === dateKey;
                 const disabled = !day.selectable || day.count === 0;
+                const weekday = weekdayShort[isoDayOfWeek(day.dateKey)];
+                const dayNumber = Number(day.dateKey.slice(8));
+                const month = Number(day.dateKey.slice(5, 7));
+                // Sin `aria-label`: el nombre accesible surge del contenido,
+                // así coincide con el texto visible (axe lo exige). El detalle
+                // extra va en `sr-only` dentro del enlace posicionado.
+                const visibleAvailability = day.closed
+                  ? "Cerrado"
+                  : day.count === 0
+                    ? "—"
+                    : `${day.count} libres`;
+                const announcedDetail = day.closed
+                  ? "cerrado"
+                  : day.count === 0
+                    ? "sin horarios"
+                    : `${day.count} horarios libres`;
 
                 return (
                   <Link
@@ -345,9 +361,8 @@ export default async function PublicBookingPage({
                     href={disabled ? href({}) : href({ servicio: service.id, profesional: employeeId, fecha: day.dateKey })}
                     aria-disabled={disabled || undefined}
                     aria-current={selected ? "date" : undefined}
-                    aria-label={`${weekdayShort[isoDayOfWeek(day.dateKey)]} ${Number(day.dateKey.slice(8))} de ${Number(day.dateKey.slice(5, 7))}: ${day.count === 0 ? "sin horarios" : `${day.count} horarios libres`}`}
                     className={cn(
-                      "flex w-16 shrink-0 flex-col items-center rounded-md border px-2 py-3 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                      "relative flex w-16 shrink-0 flex-col items-center rounded-md border px-2 py-3 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
                       selected
                         ? "border-primary bg-primary text-primary-fg"
                         : disabled
@@ -356,13 +371,16 @@ export default async function PublicBookingPage({
                     )}
                   >
                     <span className="text-[10px] tracking-wide uppercase opacity-80">
-                      {weekdayShort[isoDayOfWeek(day.dateKey)]}
+                      {weekday}
                     </span>
                     <span className="mt-1 text-lg leading-none font-semibold tabular-nums">
-                      {Number(day.dateKey.slice(8))}
+                      {dayNumber}
                     </span>
                     <span className={cn("mt-1.5 text-[9px]", selected ? "opacity-80" : "text-ink-muted")}>
-                      {day.closed ? "Cerrado" : day.count === 0 ? "—" : `${day.count} libres`}
+                      {visibleAvailability}
+                    </span>
+                    <span className="sr-only">
+                      {`de ${month}: ${announcedDetail}`}
                     </span>
                   </Link>
                 );
