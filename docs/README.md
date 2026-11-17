@@ -1,7 +1,7 @@
 # Booking System — Documentación
 
 Plantilla comercializable de gestión de turnos y reservas.
-Estado actual: **Etapas 0, 1, 2 y 3 completas** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña), un **panel con la agenda real**, el **CRUD de servicios, equipo y clientes**, **horarios y ausencias** y la **configuración del negocio**. La **Etapa 4 está en curso**: ya funciona el flujo público de reserva en `/b/[slug]`, sin cuentas de cliente; faltan la cancelación por token, el historial y el outbox. La **Etapa 5 también está en curso**: `/admin` ya es el panel con KPIs semanales y próximos turnos, `/admin/turnos` permite confirmar, cancelar, completar y marcar como ausentes los turnos, y `/admin/turnos/nuevo` carga turnos manualmente reutilizando la disponibilidad real; sigue la vista semana.
+Estado actual: **Etapas 0, 1, 2 y 3 completas** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña), un **panel con la agenda real**, el **CRUD de servicios, equipo y clientes**, **horarios y ausencias** y la **configuración del negocio**. La **Etapa 4 está en curso**: ya funciona el flujo público de reserva en `/b/[slug]`, sin cuentas de cliente; faltan la cancelación por token, el historial y el outbox. La **Etapa 5 está completa**: `/admin` es el panel con KPIs semanales y próximos turnos, `/admin/turnos` permite confirmar, cancelar, completar y marcar como ausentes los turnos en vista día o semana, y `/admin/turnos/nuevo` carga turnos manualmente reutilizando la disponibilidad real.
 
 Laboratorio visual: `pnpm dev` → <http://localhost:3000/lab>
 Panel protegido: `pnpm dev` → <http://localhost:3000/admin> (redirige a `/ingresar`)
@@ -29,6 +29,7 @@ Reserva pública: `pnpm dev` → <http://localhost:3000/b/estudio-norte>
 | Acciones de turno | ✅ confirmar/cancelar/completar/marcar ausente con transiciones válidas, permisos por rol y evento en `AppointmentEvent` |
 | Dashboard | ✅ KPIs de la semana, próximos turnos y carga por profesional, con navegación semanal |
 | Alta manual | ✅ turnos desde el panel con disponibilidad real, cliente existente o nuevo, origen y evento `CREATED` |
+| Vista semana | ✅ grilla de lunes a domingo agrupada por profesional, con feriados, estados y navegación |
 | Contraste AA por tokens | ✅ 14 pares × 5 conceptos sin fallas |
 | Node | 24.22.3 (instalado en `~/.local/opt/node`) |
 | pnpm | 12.21.0 |
@@ -220,7 +221,7 @@ Solo para desarrollo local. En producción se cambia al aprovisionar la instanci
 | Ruta | Contenido |
 |---|---|
 | `/admin` | Panel: resumen de la semana y próximos turnos |
-| `/admin/turnos` | Agenda del día con acciones de estado |
+| `/admin/turnos` | Agenda con vistas día y semana y acciones de estado (`?vista=dia\|semana&fecha=…`) |
 | `/admin/turnos/nuevo` | Alta manual de turnos |
 
 | Pieza | Archivo |
@@ -228,7 +229,8 @@ Solo para desarrollo local. En producción se cambia al aprovisionar la instanci
 | Shell del panel | `src/app/admin/layout.tsx` |
 | Navegación (server + cliente) | `src/app/admin/panel-nav.tsx` |
 | Dashboard | `src/app/admin/page.tsx` |
-| Agenda del día y botones de acción | `src/app/admin/turnos/page.tsx` |
+| Agenda del día, toggle y botones de acción | `src/app/admin/turnos/page.tsx` |
+| Vista semanal por profesional | `src/app/admin/turnos/week-agenda.tsx` |
 | Server Action de cambio de estado | `src/app/admin/turnos/actions.ts` |
 | Alta manual (pantalla, form y action) | `src/app/admin/turnos/nuevo/` |
 | Esquemas y ajustes de alta manual | `src/lib/admin/manual-booking.ts` |
@@ -257,9 +259,9 @@ Comportamiento común:
 
 Estados vacíos: si no hay próximos turnos se muestra "Agenda despejada"; si nadie tiene turnos activos en la semana, la carga por profesional lo indica. Los totales salen del snapshot del turno, no del catálogo actual.
 
-### Agenda y acciones de turno
+### Agenda: día y semana
 
-En `/admin/turnos`:
+En `/admin/turnos`, `?vista=dia` (valor por defecto) y `?vista=semana` comparten el selector de vista y el parámetro `?fecha=yyyy-MM-dd`. El cambio de día o de semana conserva la vista activa.
 
 1. El rango del día se calcula con `dayBounds` y el listado muestra horario, cliente, servicio, profesional y estado.
 2. Estados del día: `feriado` (cierre por feriado), `cerrado` (sin horario cargado), `sin turnos` (día abierto sin reservas) y listado normal. Los turnos cancelados se muestran atenuados, no se ocultan.
@@ -281,6 +283,16 @@ Reglas:
 5. **Timestamps.** Confirmar completa `confirmedAt`, cancelar completa `cancelledAt` y completar completa `completedAt`. El evento y el turno se escriben en la misma transacción.
 6. **Feedback.** El action revalida `/admin` y `/admin/turnos`, y redirige con `ok=<accion>` o un código de error; la agenda muestra un banner accesible (`role="status"` / `role="alert"`).
 
+### Vista semana
+
+Con `?vista=semana`, `/admin/turnos` muestra la semana que contiene `?fecha=` (lunes a domingo en la zona del negocio):
+
+1. **Agrupada por profesional.** Cada profesional activo tiene una sección con siete columnas, una por día. Los turnos se ordenan por hora y muestran hora, cliente, servicio y estado con texto, no solo color. Si un turno pertenece a un profesional dado de baja, aparece en un grupo adicional para no perderse del histórico.
+2. **Rango y feriados.** Se reutiliza `weekBounds` y `getDayAgenda` con el mismo `[lunes, lunes siguiente)` del dashboard; `getHolidaysInRange` trae los feriados en una sola consulta para marcar los días cerrados.
+3. **Navegación.** Semana anterior, siguiente y vuelta a la actual; el encabezado de cada día y cada tarjeta enlazan con la vista día de esa fecha.
+4. **Estados y snapshots.** Los cancelados se atenúan y tachan pero siguen visibles; no cuentan como activos. Los totales salen del snapshot del turno, igual que en la vista día.
+5. **Estado vacío.** Si la semana no tiene turnos se muestra un aviso y las columnas quedan vacías.
+
 ### Alta manual
 
 En `/admin/turnos/nuevo` se eligen servicio, profesional y fecha con un formulario `GET`; la misma pantalla muestra los horarios libres calculados con `getAvailabilitySource` y `slotsForDate`, agrupados en Mañana y Tarde.
@@ -294,7 +306,7 @@ Reglas:
 5. **Idempotencia y concurrencia.** El formulario genera un `clientRequestId`; un doble submit devuelve el mismo turno. Si otra reserva ocupa el horario entre el `GET` y el `POST`, la exclusión SQL se traduce en un error recuperable.
 6. **Snapshots.** Se guardan precio, duración, buffer y moneda del servicio al momento del alta.
 
-Sigue pendiente en el panel: la vista semana. La reserva pública ya escribe en la misma tabla.
+La Etapa 5 queda así cerrada en el panel: resumen semanal, agenda día/semana con acciones y alta manual. La reserva pública escribe en la misma tabla.
 
 ## Catálogo: servicios y equipo
 

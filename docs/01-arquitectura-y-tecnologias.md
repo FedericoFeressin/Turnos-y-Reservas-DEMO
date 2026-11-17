@@ -470,7 +470,7 @@ Estimaciones indicativas asumiendo dedicación parcial (~20 h/semana). No son co
 | **2. Laboratorio visual** | Shell del lab + sistema de tokens + 5 conceptos en 4 pantallas clave + comparador | Elegís un concepto; se documenta el sistema visual | ✅ cerrada (Papel) |
 | **3. MVP núcleo** | Modelo de datos, migraciones, seed, auth, CRUD de servicios/equipo/clientes, configuración | Panel usable con datos reales, en alcance simple (una barbería por instancia) | ✅ cerrada: base, seed, auth, agenda, catálogo, clientes, horarios y configuración |
 | **4. Motor de reservas** | Disponibilidad, flujo público, anti-solapamiento, cancelación, historial, outbox | Criterios de aceptación 1–4 y 6–9 | 🔄 en curso: reserva pública, disponibilidad, idempotencia y anti-solapamiento verificados; faltan cancelación, historial y outbox |
-| **5. Calendario y dashboard** | Vistas día/semana/lista, creación manual, KPIs, estados vacíos | Un dueño puede operar el día completo desde el panel | 🔄 en curso: dashboard semanal, agenda diaria, acciones de estado y alta manual verificadas; falta la vista semana |
+| **5. Calendario y dashboard** | Vistas día/semana/lista, creación manual, KPIs, estados vacíos | Un dueño puede operar el día completo desde el panel | ✅ cerrada: dashboard semanal, agenda día/semana, acciones de estado y alta manual verificadas |
 | **6. QA** | Playwright E2E, axe, revisión responsive, pruebas de concurrencia, Lighthouse | Criterios 1–10 verificados | 1–2 semanas |
 | **7. Comercial** | Aprovisionamiento scriptado, documentación de despliegue, backup, guía de personalización | Se puede entregar una instancia nueva en < 1 h | 1–2 semanas |
 
