@@ -162,6 +162,7 @@ Se fija versión exacta en `package.json` (sin `^`) y se actualiza con revisión
 - En horarios de atención: día de semana + minutos desde medianoche **locales del negocio** (inmune a DST).
 - Conversión a UTC solo al calcular disponibilidad, usando `Business.timezone`.
 - En la UI: siempre en la zona del negocio, con la zona explícita si el usuario está en otra.
+- La sesión de PostgreSQL se fija en UTC con `options: "-c timezone=UTC"` en `PrismaPg` (también en el seed). El adaptador envía los `Date` sin sufijo de zona; sin esa opción el servidor con `TimeZone=America/Argentina/Buenos_Aires` guarda los `timestamptz` con un desfase de 3 horas.
 
 Descartado: `moment` (obsoleto), `dayjs` (correcto pero sin ventaja acá), `Temporal` (aún no es estándar en todos los runtimes; se reevalúa).
 
@@ -262,6 +263,8 @@ Cliente → /b/[slug]/reservar
 ```
 
 **Por qué revalidar en el servidor:** entre el `GET` de disponibilidad y el `POST` pueden pasar minutos. La fuente de verdad es el `INSERT` dentro de la transacción, no la lista que vio el usuario.
+
+**Estado de implementación (Etapa 4, en curso).** Ya está funcionando el flujo en `/b/[slug]` con confirmación en `/b/[slug]/reserva/[id]`. La disponibilidad es una función pura en `src/lib/booking/availability.ts` que se usa tanto para pintar la grilla como para revalidar el `POST`; no hay endpoint `/api/availability` porque los `searchParams` del asistente ya resuelven cada paso en el servidor. La confirmación usa el id del turno, filtrado por `businessId` (no un token opaco). La identidad del cliente es el teléfono normalizado, sin cuenta. Falta el token de cancelación, el historial de eventos y el outbox, que son el resto de la Etapa 4.
 
 ### 3.3 Enforcement de tenant
 
@@ -466,7 +469,7 @@ Estimaciones indicativas asumiendo dedicación parcial (~20 h/semana). No son co
 | **1. Planificación** | Estos documentos + decisiones validadas | Vos aprobás stack, modalidad y rubro piloto | ✅ cerrada |
 | **2. Laboratorio visual** | Shell del lab + sistema de tokens + 5 conceptos en 4 pantallas clave + comparador | Elegís un concepto; se documenta el sistema visual | ✅ cerrada (Papel) |
 | **3. MVP núcleo** | Modelo de datos, migraciones, seed, auth, CRUD de servicios/equipo/clientes, configuración | Panel usable con datos reales, en alcance simple (una barbería por instancia) | ✅ cerrada: base, seed, auth, agenda, catálogo, clientes, horarios y configuración |
-| **4. Motor de reservas** | Disponibilidad, flujo público, anti-solapamiento, cancelación, historial, outbox | Criterios de aceptación 1–4 y 6–9 | 2–3 semanas |
+| **4. Motor de reservas** | Disponibilidad, flujo público, anti-solapamiento, cancelación, historial, outbox | Criterios de aceptación 1–4 y 6–9 | 🔄 en curso: reserva pública, disponibilidad, idempotencia y anti-solapamiento verificados; faltan cancelación, historial y outbox |
 | **5. Calendario y dashboard** | Vistas día/semana/lista, creación manual, KPIs, estados vacíos | Un dueño puede operar el día completo desde el panel | 1–2 semanas |
 | **6. QA** | Playwright E2E, axe, revisión responsive, pruebas de concurrencia, Lighthouse | Criterios 1–10 verificados | 1–2 semanas |
 | **7. Comercial** | Aprovisionamiento scriptado, documentación de despliegue, backup, guía de personalización | Se puede entregar una instancia nueva en < 1 h | 1–2 semanas |

@@ -1,10 +1,11 @@
 # Booking System — Documentación
 
 Plantilla comercializable de gestión de turnos y reservas.
-Estado actual: **Etapas 0, 1, 2 y 3 completas** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña), un **panel con la agenda real**, el **CRUD de servicios, equipo y clientes**, **horarios y ausencias** y la **configuración del negocio**. Sigue conectar el flujo público de reserva (Etapa 4).
+Estado actual: **Etapas 0, 1, 2 y 3 completas** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña), un **panel con la agenda real**, el **CRUD de servicios, equipo y clientes**, **horarios y ausencias** y la **configuración del negocio**. La **Etapa 4 está en curso**: ya funciona el flujo público de reserva en `/b/[slug]`, sin cuentas de cliente. Siguen pendientes dentro de esa etapa la cancelación, el historial de eventos y el outbox de notificaciones.
 
 Laboratorio visual: `pnpm dev` → <http://localhost:3000/lab>
 Panel protegido: `pnpm dev` → <http://localhost:3000/admin> (redirige a `/ingresar`)
+Reserva pública: `pnpm dev` → <http://localhost:3000/b/estudio-norte>
 
 ## Estado verificado
 
@@ -21,6 +22,10 @@ Panel protegido: `pnpm dev` → <http://localhost:3000/admin> (redirige a `/ingr
 | Clientes | ✅ alta, edición, búsqueda e historial de turnos con KPIs |
 | Disponibilidad | ✅ horario semanal por profesional (franjas múltiples) y ausencias/cierres |
 | Configuración | ✅ datos del negocio, horario general y feriados, con permisos por rol |
+| Reserva pública | ✅ servicio → profesional → fecha → hora → datos → confirmación, sin cuenta de cliente |
+| Idempotencia | ✅ un `clientRequestId` repetido devuelve el mismo turno, sin duplicados |
+| Disponibilidad real | ✅ anticipación mínima, franjas por profesional, ausencias, feriados y rangos ocupados |
+| Zona horaria | ✅ la sesión de PostgreSQL se fija en UTC; un turno elegido a las 12:00 local se guarda como 15:00Z y vuelve a leerse a las 12:00 |
 | Contraste AA por tokens | ✅ 14 pares × 5 conceptos sin fallas |
 | Node | 24.22.3 (instalado en `~/.local/opt/node`) |
 | pnpm | 12.21.0 |
@@ -134,10 +139,14 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/generated/prisma/client";
 
 const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
+  adapter: new PrismaPg({
+    connectionString: process.env.DATABASE_URL,
+    options: "-c timezone=UTC",
+  }),
 });
 ```
 
+- **`options: "-c timezone=UTC"` es obligatorio.** `@prisma/adapter-pg` serializa los `Date` como `YYYY-MM-DD HH:mm:ss` sin sufijo de zona. Si la sesión queda en `America/Argentina/Buenos_Aires`, PostgreSQL interpreta ese texto como hora local y guarda los `timestamptz` con un desfase de 3 horas. Fijar UTC en la conexión alinea la escritura con el `Date` de JavaScript. El mismo ajuste está en `prisma/seed.ts`.
 - La CLI no lee `.env` de Next: `prisma7.config.ts` carga `.env.local` y `.env` con `dotenv`.
 
 ### Variables de entorno
@@ -226,7 +235,7 @@ Comportamiento:
 5. Estados del día: `feriado` (cierre por feriado), `cerrado` (sin horario cargado), `sin turnos` (día abierto sin reservas) y listado normal. Los turnos cancelados se muestran atenuados, no se ocultan.
 6. La navegación permite ir al día anterior, al siguiente y volver a hoy.
 
-Todavía no hay escrituras: crear, confirmar o cancelar turnos llega con el CRUD y el motor de reservas.
+El panel sigue siendo de solo lectura: crear, confirmar o cancelar turnos desde `/admin` llega con el CRUD de la Etapa 5. La reserva pública ya escribe en la misma tabla.
 
 ## Catálogo: servicios y equipo
 
@@ -282,7 +291,7 @@ Reglas:
 7. **Historial y KPIs.** La ficha muestra turnos, cancelados/ausencias, total gastado (solo `COMPLETED`) y próximo turno (`PENDING`/`CONFIRMED` en el futuro). El historial incluye servicio, profesional, duración, precio y estado.
 8. **Permisos y PRG.** Mismas reglas que el catálogo: `OWNER`/`ADMIN` escriben con `requireManager`; el alta redirige a la ficha (`?ok=creado`) y la edición al listado (`?ok=actualizado`).
 
-Pendiente en esta sección: baja lógica, fusión de duplicados históricos y vínculo con el flujo público de reserva.
+El flujo público ya reutiliza este criterio: busca por `phoneNormalized` antes de crear y actualiza el nombre y el email del cliente existente en vez de duplicarlo. Pendiente: baja lógica y fusión de duplicados históricos.
 
 ## Horarios y ausencias
 
@@ -334,7 +343,40 @@ Reglas:
 5. **Turnos existentes.** Ni el horario general ni los feriados cancelan turnos ya agendados.
 6. **Permisos.** `OWNER`/`ADMIN` editan con `requireManager`; `STAFF` ve las tres secciones en modo solo lectura. Al guardar los datos se revalida el layout completo para actualizar el nombre en el encabezado.
 
-Fuera del alcance simple: preferencias avanzadas de reserva (`BusinessSettings`), temas por negocio, logo y multi-negocio en la interfaz. La reserva pública usará los valores por defecto ya sembrados.
+Fuera del alcance simple: temas por negocio, logo y multi-negocio en la interfaz. La reserva pública lee `BusinessSettings` directamente: anticipación mínima, granularidad, "cualquiera", visibilidad de precios y profesional, confirmación manual y políticas.
+
+## Reserva pública
+
+| Ruta | Contenido |
+|---|---|
+| `/b/[slug]` | Asistente de cuatro pasos (servicio, profesional, fecha/hora, datos) |
+| `/b/[slug]/reserva/[id]` | Confirmación con código, detalle y link al calendario |
+
+| Pieza | Archivo |
+|---|---|
+| Disponibilidad pura | `src/lib/booking/availability.ts` |
+| Consultas públicas | `src/lib/booking/public.ts` |
+| Esquema y lectura de `FormData` | `src/lib/booking/public-schema.ts` |
+| Server Action e idempotencia | `src/app/b/[slug]/actions.ts` |
+| Wizard | `src/app/b/[slug]/page.tsx` |
+| Formulario con `useActionState` | `src/app/b/[slug]/booking-form.tsx` |
+| Layout y metadata | `src/app/b/[slug]/layout.tsx` |
+| Confirmación | `src/app/b/[slug]/reserva/[id]/page.tsx` |
+
+Reglas:
+
+1. **Sin cuenta de cliente.** El teléfono normalizado es la identidad. Si ya existe un cliente con ese número en el negocio, se reutiliza y se actualizan sus datos; si está bloqueado, la reserva se rechaza.
+2. **Slug como frontera.** Toda lectura y escritura filtra por el `businessId` resuelto desde el slug. Un slug inexistente o inactivo da 404; la confirmación de otro negocio también da 404.
+3. **Disponibilidad calculada en servidor, dos veces.** La misma función pura genera la grilla que ve el cliente y revalida el `POST` justo antes de insertar. Se consideran horario general, franjas propias del profesional, ausencias, feriados cerrados, anticipación mínima, granularidad y el rango `[starts_at, blocked_until)` de los turnos activos.
+4. **Herencia de horarios.** Si el profesional no tiene ninguna franja cargada en la semana hereda el horario general; si tiene al menos una, solo atiende esas franjas. Así Sofía sigue sin atender los miércoles aunque el negocio abra.
+5. **"Cualquiera" se resuelve en servidor.** Se prueban los profesionales elegibles en orden y, si la restricción de exclusión rechaza uno por una carrera, se intenta con el siguiente antes de devolver error.
+6. **Idempotencia.** El formulario genera un `clientRequestId` (UUID). Un doble submit devuelve siempre la misma URL de confirmación.
+7. **Estado inicial.** El turno nace `PENDING` si `requireManualConfirmation` está activo; si no, `CONFIRMED` con `confirmedAt`. El estado se muestra en la confirmación.
+8. **Snapshots.** Se guardan precio, duración, buffer y moneda del turno, para que editar el catálogo no reescriba el historial.
+9. **Ventana acotada.** La tira muestra 21 días aunque `maxAdvanceDays` permita 60.
+10. **Datos sensibles.** Los campos ocultos son solo selectores; el action vuelve a validar servicio, profesional, fecha y hora contra la base antes de escribir.
+
+Pendiente dentro de la Etapa 4: cancelación por link con token, historial de eventos del turno y outbox de notificaciones.
 
 ## Convención de commits
 
