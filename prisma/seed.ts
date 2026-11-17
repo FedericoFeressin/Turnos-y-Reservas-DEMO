@@ -36,8 +36,13 @@ if (!databaseUrl) {
   throw new Error("Falta DATABASE_URL. Copiá .env.example a .env.local.");
 }
 
+// El adaptador pg escribe los `Date` sin sufijo de zona; fijar UTC en la sesión
+// evita que PostgreSQL los interprete como hora local y corra los timestamptz.
 const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: databaseUrl }),
+  adapter: new PrismaPg({
+    connectionString: databaseUrl,
+    options: "-c timezone=UTC",
+  }),
 });
 
 const now = new Date();

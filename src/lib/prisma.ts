@@ -13,8 +13,18 @@ function createPrismaClient(): PrismaClient {
     );
   }
 
+  // El adaptador pg serializa los `Date` como `YYYY-MM-DD HH:mm:ss` sin zona.
+  // Si la sesión de PostgreSQL queda en America/Argentina/Buenos_Aires, esos
+  // valores se interpretan como hora local y los timestamptz se guardan con un
+  // desfase de 3 horas. Fijar UTC en la conexión hace que la lectura y la
+  // escritura usen el mismo instante que el `Date` de JavaScript.
+  const adapter = new PrismaPg({
+    connectionString,
+    options: "-c timezone=UTC",
+  });
+
   return new PrismaClient({
-    adapter: new PrismaPg({ connectionString }),
+    adapter,
     log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
   });
 }
