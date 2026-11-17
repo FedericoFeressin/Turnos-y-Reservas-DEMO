@@ -232,3 +232,79 @@ export type BusinessScheduleRow = Awaited<
   ReturnType<typeof listBusinessSchedule>
 >[number];
 export type HolidayRow = Awaited<ReturnType<typeof listHolidays>>[number];
+
+/**
+ * Catálogo para el alta manual. Incluye servicios no públicos (el panel puede
+ * agendar cualquier servicio activo) y clientes no bloqueados.
+ */
+export async function getManualBookingCatalog(businessId: string) {
+  const [services, employees, customers, settings] = await Promise.all([
+    prisma.service.findMany({
+      where: { businessId, isActive: true, deletedAt: null },
+      select: {
+        id: true,
+        name: true,
+        priceCents: true,
+        durationMinutes: true,
+        bufferAfterMinutes: true,
+        sortOrder: true,
+        employees: { select: { employeeId: true } },
+      },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    }),
+    prisma.employee.findMany({
+      where: { businessId, isActive: true, deletedAt: null },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        displayName: true,
+        color: true,
+        sortOrder: true,
+        services: { select: { serviceId: true } },
+      },
+      orderBy: [{ sortOrder: "asc" }, { firstName: "asc" }],
+    }),
+    prisma.customer.findMany({
+      where: { businessId, deletedAt: null, isBlocked: false },
+      select: { id: true, firstName: true, lastName: true, phone: true },
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    }),
+    prisma.businessSettings.findUnique({
+      where: { businessId },
+      select: {
+        slotGranularityMinutes: true,
+        maxAdvanceDays: true,
+        allowChooseAnyStaff: true,
+        showStaffSelection: true,
+        showPrices: true,
+        requireManualConfirmation: true,
+        bookingPolicyText: true,
+        cancellationPolicyText: true,
+      },
+    }),
+  ]);
+
+  return {
+    services: services.map((service) => ({
+      id: service.id,
+      name: service.name,
+      priceCents: service.priceCents,
+      durationMinutes: service.durationMinutes,
+      bufferAfterMinutes: service.bufferAfterMinutes,
+      employeeIds: service.employees.map((link) => link.employeeId),
+    })),
+    employees: employees.map((employee) => ({
+      id: employee.id,
+      name: employee.displayName ?? `${employee.firstName} ${employee.lastName}`,
+      color: employee.color,
+      serviceIds: employee.services.map((link) => link.serviceId),
+    })),
+    customers,
+    settings,
+  };
+}
+
+export type ManualBookingCatalog = Awaited<
+  ReturnType<typeof getManualBookingCatalog>
+>;

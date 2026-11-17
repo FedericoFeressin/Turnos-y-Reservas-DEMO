@@ -102,32 +102,41 @@ export default async function AdminAgendaPage({
           </p>
         </div>
 
-        <nav aria-label="Cambiar de día" className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
           <Link
-            href={`/admin/turnos?fecha=${shiftDateKey(dateKey, -1)}`}
-            aria-label="Día anterior"
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "px-2.5")}
+            href="/admin/turnos/nuevo"
+            className={buttonVariants({ size: "sm" })}
           >
-            <ChevronLeft className="size-4" />
+            Nuevo turno
           </Link>
 
-          {dateKey !== currentKey ? (
+          <nav aria-label="Cambiar de día" className="flex items-center gap-2">
             <Link
-              href="/admin/turnos"
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+              href={`/admin/turnos?fecha=${shiftDateKey(dateKey, -1)}`}
+              aria-label="Día anterior"
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "px-2.5")}
             >
-              Hoy
+              <ChevronLeft className="size-4" />
             </Link>
-          ) : null}
 
-          <Link
-            href={`/admin/turnos?fecha=${shiftDateKey(dateKey, 1)}`}
-            aria-label="Día siguiente"
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "px-2.5")}
-          >
-            <ChevronRight className="size-4" />
-          </Link>
-        </nav>
+            {dateKey !== currentKey ? (
+              <Link
+                href="/admin/turnos"
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+              >
+                Hoy
+              </Link>
+            ) : null}
+
+            <Link
+              href={`/admin/turnos?fecha=${shiftDateKey(dateKey, 1)}`}
+              aria-label="Día siguiente"
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "px-2.5")}
+            >
+              <ChevronRight className="size-4" />
+            </Link>
+          </nav>
+        </div>
       </div>
 
       {error ? (
