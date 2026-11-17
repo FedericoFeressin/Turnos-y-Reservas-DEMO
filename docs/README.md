@@ -1,7 +1,7 @@
 # Booking System — Documentación
 
 Plantilla comercializable de gestión de turnos y reservas.
-Estado actual: **Etapas 0, 1 y 2 completas**; **Etapa 3 en curso** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña), un **panel con la agenda real** de PostgreSQL (solo lectura) y el **CRUD de servicios, equipo y clientes**, más **horarios y ausencias**. Falta configuración y conectar el flujo público de reserva a la base.
+Estado actual: **Etapas 0, 1, 2 y 3 completas** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña), un **panel con la agenda real**, el **CRUD de servicios, equipo y clientes**, **horarios y ausencias** y la **configuración del negocio**. Sigue conectar el flujo público de reserva (Etapa 4).
 
 Laboratorio visual: `pnpm dev` → <http://localhost:3000/lab>
 Panel protegido: `pnpm dev` → <http://localhost:3000/admin> (redirige a `/ingresar`)
@@ -20,6 +20,7 @@ Panel protegido: `pnpm dev` → <http://localhost:3000/admin> (redirige a `/ingr
 | Catálogo | ✅ alta, edición y activación de servicios y profesionales, con permisos por rol |
 | Clientes | ✅ alta, edición, búsqueda e historial de turnos con KPIs |
 | Disponibilidad | ✅ horario semanal por profesional (franjas múltiples) y ausencias/cierres |
+| Configuración | ✅ datos del negocio, horario general y feriados, con permisos por rol |
 | Contraste AA por tokens | ✅ 14 pares × 5 conceptos sin fallas |
 | Node | 24.22.3 (instalado en `~/.local/opt/node`) |
 | pnpm | 12.21.0 |
@@ -306,7 +307,34 @@ Reglas:
 6. **Turnos existentes.** Cambiar horarios o cargar ausencias **no mueve ni cancela turnos ya agendados**. La pantalla lo advierte; el reencaje llega con el motor de reservas.
 7. **Permisos.** `OWNER`/`ADMIN` editan con `requireManager`; `STAFF` ve la pantalla en modo solo lectura, sin formularios ni botones de borrado.
 
-Pendiente en esta sección: excepciones por fecha, horarios del negocio (hoy fijos en `BusinessSchedule`), validación contra la agenda y detección de turnos afectados.
+Pendiente en esta sección: excepciones por fecha, validación contra la agenda y detección de turnos afectados.
+
+## Configuración
+
+| Ruta | Contenido |
+|---|---|
+| `/admin/configuracion?seccion=datos` | Datos públicos y operativos del negocio |
+| `/admin/configuracion?seccion=horarios` | Horario general de atención semanal |
+| `/admin/configuracion?seccion=feriados` | Feriados y cierres puntuales |
+
+| Pieza | Archivo |
+|---|---|
+| Esquemas `businessProfileSchema`, `businessScheduleSchema` y `holidaySchema` | `src/lib/admin/schemas.ts` |
+| Consultas `listBusinessSchedule` y `listHolidays` | `src/lib/admin/queries.ts` |
+| Server Actions | `src/app/admin/configuracion/actions.ts` |
+| Formulario de datos | `src/app/admin/configuracion/business-form.tsx` |
+| Pantalla con secciones | `src/app/admin/configuracion/page.tsx` |
+
+Reglas:
+
+1. **Datos del negocio.** Nombre, razón social, CUIT, contacto, redes, ubicación, zona horaria y moneda. El sitio web agrega `https://` si falta el protocolo y el usuario de Instagram se guarda sin `@`.
+2. **Zona horaria y moneda.** Se validan contra `Intl` y con códigos ISO (`AR`, `ARS`). Cambiar la zona horaria cambia cómo se interpretan los horarios de la agenda.
+3. **Horario general.** Franjas semanales del negocio con la misma validación que las de cada profesional: fin posterior al inicio y sin superposición por día.
+4. **Feriados.** Fecha única por negocio (columna `@db.Date`), nombre, nota y estado abierto/cerrado. No se puede repetir la misma fecha.
+5. **Turnos existentes.** Ni el horario general ni los feriados cancelan turnos ya agendados.
+6. **Permisos.** `OWNER`/`ADMIN` editan con `requireManager`; `STAFF` ve las tres secciones en modo solo lectura. Al guardar los datos se revalida el layout completo para actualizar el nombre en el encabezado.
+
+Fuera del alcance simple: preferencias avanzadas de reserva (`BusinessSettings`), temas por negocio, logo y multi-negocio en la interfaz. La reserva pública usará los valores por defecto ya sembrados.
 
 ## Convención de commits
 

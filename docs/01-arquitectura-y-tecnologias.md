@@ -465,7 +465,7 @@ Estimaciones indicativas asumiendo dedicación parcial (~20 h/semana). No son co
 | **0. Entorno** | Node (fnm), pnpm, Docker + Postgres local, repo git, Next.js con TS/ESLint/Prettier/Tailwind, `.env.example` | `pnpm dev` levanta; `pnpm build` pasa; commit inicial | 1–2 días |
 | **1. Planificación** | Estos documentos + decisiones validadas | Vos aprobás stack, modalidad y rubro piloto | ✅ cerrada |
 | **2. Laboratorio visual** | Shell del lab + sistema de tokens + 5 conceptos en 4 pantallas clave + comparador | Elegís un concepto; se documenta el sistema visual | ✅ cerrada (Papel) |
-| **3. MVP núcleo** | Modelo de datos, migraciones, seed, auth, CRUD de servicios/equipo/clientes, configuración | Panel usable con datos reales; tests de tenant | 🔄 en curso: base, seed, auth, agenda, servicios, equipo, clientes y horarios listos |
+| **3. MVP núcleo** | Modelo de datos, migraciones, seed, auth, CRUD de servicios/equipo/clientes, configuración | Panel usable con datos reales, en alcance simple (una barbería por instancia) | ✅ cerrada: base, seed, auth, agenda, catálogo, clientes, horarios y configuración |
 | **4. Motor de reservas** | Disponibilidad, flujo público, anti-solapamiento, cancelación, historial, outbox | Criterios de aceptación 1–4 y 6–9 | 2–3 semanas |
 | **5. Calendario y dashboard** | Vistas día/semana/lista, creación manual, KPIs, estados vacíos | Un dueño puede operar el día completo desde el panel | 1–2 semanas |
 | **6. QA** | Playwright E2E, axe, revisión responsive, pruebas de concurrencia, Lighthouse | Criterios 1–10 verificados | 1–2 semanas |
