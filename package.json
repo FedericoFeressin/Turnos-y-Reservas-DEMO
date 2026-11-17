@@ -13,11 +13,13 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "postinstall": "prisma generate",
     "test:e2e": "playwright test",
     "db:start": "bash scripts/dev-db.sh start",
     "db:stop": "bash scripts/dev-db.sh stop",
     "db:status": "bash scripts/dev-db.sh status",
     "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio"
   },
