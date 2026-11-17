@@ -45,7 +45,7 @@
 | 4 | **Zona horaria y DST** | Un turno a las 15:00 debe ser 15:00 en el local, no en el servidor. Argentina no aplica DST hoy, pero el producto es comercializable a otros países. | `timestamptz` en UTC, horarios como minutos locales, `Business.timezone` IANA. |
 | 5 | **Accesibilidad del calendario** | Las grillas de calendario son trampas de teclado y de lector de pantalla. | Vista de grilla + vista de lista equivalente, navegación por teclado documentada. |
 | 6 | **Sobredimensionar el panel** | Reportes, gráficos, exportaciones. Nada de eso valida el producto. | MVP acotado (§6). |
-| 7 | **Sin notificaciones, el producto no sirve en producción** | El brief las pone como "futuro", pero un negocio real necesita confirmar por email/WhatsApp o el cliente no sabe que tiene turno. | Dejar el patrón *outbox* implementado en el MVP con un canal email simple. Se activa el envío real en Etapa 3.5. |
+| 7 | **Sin notificaciones, el producto no sirve en producción** | El brief las pone como "futuro", pero un negocio real necesita confirmar por email/WhatsApp o el cliente no sabe que tiene turno. | Dejar el patrón *outbox* implementado en el MVP con un canal email simple. El envío real se activa cuando se aprovisione el proveedor, fuera de este alcance. |
 | 8 | **El brief pide "4 estilos" y el agente puede entregar 4 skins del mismo layout** | Sería trabajo sin valor: cuatro variaciones de color no son cuatro conceptos. | Cada concepto define densidad, tipografía, radios, jerarquía y tono de copy, no solo paleta. |
 
 ### Vacíos del brief y supuestos que adopté
@@ -259,12 +259,12 @@ Cliente → /b/[slug]/reservar
              - INSERT Appointment  → si choca, EXCLUDE constraint falla
         e. si 23P01 (exclusion_violation) → reintentar 0 veces, devolver SLOT_TAKEN
         f. encolar Notification (outbox, misma transacción)
-  5. Redirect a /confirmacion/[token]  (token opaco, no el id)
+  5. Redirect a /b/[slug]/reserva/[id]  (id filtrado por businessId; token firmado para cancelar)
 ```
 
 **Por qué revalidar en el servidor:** entre el `GET` de disponibilidad y el `POST` pueden pasar minutos. La fuente de verdad es el `INSERT` dentro de la transacción, no la lista que vio el usuario.
 
-**Estado de implementación (Etapa 4, en curso).** Ya está funcionando el flujo en `/b/[slug]` con confirmación en `/b/[slug]/reserva/[id]`. La disponibilidad es una función pura en `src/lib/booking/availability.ts` que se usa tanto para pintar la grilla como para revalidar el `POST`; no hay endpoint `/api/availability` porque los `searchParams` del asistente ya resuelven cada paso en el servidor. La confirmación usa el id del turno, filtrado por `businessId` (no un token opaco). La identidad del cliente es el teléfono normalizado, sin cuenta. Falta el token de cancelación, el historial de eventos y el outbox, que son el resto de la Etapa 4.
+**Estado de implementación (Etapa 4, cerrada).** Funciona el flujo en `/b/[slug]` con confirmación en `/b/[slug]/reserva/[id]`. La disponibilidad es una función pura en `src/lib/booking/availability.ts` que se usa tanto para pintar la grilla como para revalidar el `POST`; no hay endpoint `/api/availability` porque los `searchParams` del asistente ya resuelven cada paso en el servidor. La confirmación usa el id del turno filtrado por `businessId` y muestra el historial de `AppointmentEvent`. La identidad del cliente es el teléfono normalizado, sin cuenta. La cancelación pública usa un token HMAC-SHA256 (`src/lib/booking/token.ts`) con el `businessId` y el `appointmentId` en el payload, sin tabla ni migración nueva; respeta `cancellationWindowMinutes` y es idempotente. El outbox (`src/lib/booking/records.ts`) escribe `Notification` en la misma transacción que el turno, su evento y la cancelación; no hay proveedor de envío cableado.
 
 ### 3.3 Enforcement de tenant
 
@@ -434,7 +434,7 @@ turnos-y-reservas/
 - Cálculo de disponibilidad en servidor.
 - Zona horaria por negocio.
 - Historial de cambios de cada turno.
-- Notificación interna (outbox) + email de confirmación cableado.
+- Outbox de notificaciones persistente (`QUEUED`/`CANCELLED`); sin proveedor de envío cableado.
 - Seed reproducible con datos de demo.
 - Accesibilidad AA en flujos críticos y responsive real.
 
@@ -469,7 +469,7 @@ Estimaciones indicativas asumiendo dedicación parcial (~20 h/semana). No son co
 | **1. Planificación** | Estos documentos + decisiones validadas | Vos aprobás stack, modalidad y rubro piloto | ✅ cerrada |
 | **2. Laboratorio visual** | Shell del lab + sistema de tokens + 5 conceptos en 4 pantallas clave + comparador | Elegís un concepto; se documenta el sistema visual | ✅ cerrada (Papel) |
 | **3. MVP núcleo** | Modelo de datos, migraciones, seed, auth, CRUD de servicios/equipo/clientes, configuración | Panel usable con datos reales, en alcance simple (una barbería por instancia) | ✅ cerrada: base, seed, auth, agenda, catálogo, clientes, horarios y configuración |
-| **4. Motor de reservas** | Disponibilidad, flujo público, anti-solapamiento, cancelación, historial, outbox | Criterios de aceptación 1–4 y 6–9 | 🔄 en curso: reserva pública, disponibilidad, idempotencia y anti-solapamiento verificados; faltan cancelación, historial y outbox |
+| **4. Motor de reservas** | Disponibilidad, flujo público, anti-solapamiento, cancelación, historial, outbox | Criterios de aceptación 1–4 y 6–9 | ✅ cerrada: reserva pública, anti-solapamiento, idempotencia, cancelación por token, historial y outbox verificados |
 | **5. Calendario y dashboard** | Vistas día/semana/lista, creación manual, KPIs, estados vacíos | Un dueño puede operar el día completo desde el panel | ✅ cerrada: dashboard semanal, agenda día/semana, acciones de estado y alta manual verificadas |
 | **6. QA** | Playwright E2E, axe, revisión responsive, pruebas de concurrencia, Lighthouse | Criterios 1–10 verificados | 1–2 semanas |
 | **7. Comercial** | Aprovisionamiento scriptado, documentación de despliegue, backup, guía de personalización | Se puede entregar una instancia nueva en < 1 h | 1–2 semanas |

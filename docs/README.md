@@ -1,7 +1,7 @@
 # Booking System — Documentación
 
 Plantilla comercializable de gestión de turnos y reservas.
-Estado actual: **Etapas 0, 1, 2 y 3 completas** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña), un **panel con la agenda real**, el **CRUD de servicios, equipo y clientes**, **horarios y ausencias** y la **configuración del negocio**. La **Etapa 4 está en curso**: ya funciona el flujo público de reserva en `/b/[slug]`, sin cuentas de cliente; faltan la cancelación por token, el historial y el outbox. La **Etapa 5 está completa**: `/admin` es el panel con KPIs semanales y próximos turnos, `/admin/turnos` permite confirmar, cancelar, completar y marcar como ausentes los turnos en vista día o semana, y `/admin/turnos/nuevo` carga turnos manualmente reutilizando la disponibilidad real.
+Estado actual: **Etapas 0, 1, 2 y 3 completas** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña), un **panel con la agenda real**, el **CRUD de servicios, equipo y clientes**, **horarios y ausencias** y la **configuración del negocio**. La **Etapa 4 está completa**: funciona el flujo público de reserva en `/b/[slug]`, sin cuentas de cliente, con cancelación por token firmado, historial de eventos y outbox de notificaciones. La **Etapa 5 está completa**: `/admin` es el panel con KPIs semanales y próximos turnos, `/admin/turnos` permite confirmar, cancelar, completar y marcar como ausentes los turnos en vista día o semana, y `/admin/turnos/nuevo` carga turnos manualmente reutilizando la disponibilidad real.
 
 Laboratorio visual: `pnpm dev` → <http://localhost:3000/lab>
 Panel protegido: `pnpm dev` → <http://localhost:3000/admin> (redirige a `/ingresar`)
@@ -30,6 +30,9 @@ Reserva pública: `pnpm dev` → <http://localhost:3000/b/estudio-norte>
 | Dashboard | ✅ KPIs de la semana, próximos turnos y carga por profesional, con navegación semanal |
 | Alta manual | ✅ turnos desde el panel con disponibilidad real, cliente existente o nuevo, origen y evento `CREATED` |
 | Vista semana | ✅ grilla de lunes a domingo agrupada por profesional, con feriados, estados y navegación |
+| Cancelación pública | ✅ enlace HMAC firmado, ventana configurable, doble cancelación idempotente y evento `CANCELLED` |
+| Historial del turno | ✅ línea de tiempo visible en la confirmación, con eventos de cliente, personal y sistema |
+| Outbox | ✅ `Notification` encolada en la misma transacción; la cancelación baja las intenciones pendientes |
 | Contraste AA por tokens | ✅ 14 pares × 5 conceptos sin fallas |
 | Node | 24.22.3 (instalado en `~/.local/opt/node`) |
 | pnpm | 12.21.0 |
@@ -421,7 +424,8 @@ Fuera del alcance simple: temas por negocio, logo y multi-negocio en la interfaz
 | Ruta | Contenido |
 |---|---|
 | `/b/[slug]` | Asistente de cuatro pasos (servicio, profesional, fecha/hora, datos) |
-| `/b/[slug]/reserva/[id]` | Confirmación con código, detalle y link al calendario |
+| `/b/[slug]/reserva/[id]` | Confirmación con código, detalle, historial, calendario y enlace de cancelación |
+| `/b/[slug]/cancelar/[token]` | Cancelación pública con token firmado, motivo opcional y validación de ventana |
 
 | Pieza | Archivo |
 |---|---|
@@ -432,7 +436,11 @@ Fuera del alcance simple: temas por negocio, logo y multi-negocio en la interfaz
 | Wizard | `src/app/b/[slug]/page.tsx` |
 | Formulario con `useActionState` | `src/app/b/[slug]/booking-form.tsx` |
 | Layout y metadata | `src/app/b/[slug]/layout.tsx` |
-| Confirmación | `src/app/b/[slug]/reserva/[id]/page.tsx` |
+| Confirmación e historial | `src/app/b/[slug]/reserva/[id]/page.tsx` |
+| Token firmado de cancelación | `src/lib/booking/token.ts` |
+| Reglas y esquema de cancelación | `src/lib/booking/cancellation.ts` |
+| Eventos y outbox transaccionales | `src/lib/booking/records.ts` |
+| Pantalla, action y form de cancelación | `src/app/b/[slug]/cancelar/[token]/` |
 
 Reglas:
 
@@ -447,7 +455,24 @@ Reglas:
 9. **Ventana acotada.** La tira muestra 21 días aunque `maxAdvanceDays` permita 60.
 10. **Datos sensibles.** Los campos ocultos son solo selectores; el action vuelve a validar servicio, profesional, fecha y hora contra la base antes de escribir.
 
-Pendiente dentro de la Etapa 4: cancelación por link con token, historial de eventos del turno y outbox de notificaciones.
+### Cancelación, historial y outbox
+
+La confirmación muestra el código, el detalle y una línea de tiempo con los eventos `AppointmentEvent` del turno (creado, confirmado, cancelado, etc.), con fecha y hora en la zona del negocio. Un turno cancelado muestra el estado y el motivo, y oculta «Agregar al calendario». El enlace de cancelación solo aparece si el turno está `PENDING` o `CONFIRMED` y todavía está dentro de la ventana configurada.
+
+El enlace es un token opaco `base64url(payload).base64url(HMAC-SHA256)` generado en `src/lib/booking/token.ts`:
+
+1. **Sin tabla nueva.** El payload lleva versión, `appointmentId`, `businessId` y `exp`. El `exp` se deriva del inicio del turno (30 días después), no de la hora actual: el mismo turno produce siempre el mismo enlace y se puede reenviar sin invalidarlo.
+2. **Secreto.** Firma con `BOOKING_TOKEN_SECRET`, con fallback a `BETTER_AUTH_SECRET`. Si no hay ninguno de los dos, la app falla explícitamente en vez de firmar con un valor predecible.
+3. **Verificación.** Comparación en tiempo constante, control de versión y expiración, y comparación del `businessId` con el negocio del slug. Un token alterado o vencido muestra un estado «enlace no disponible», no un 404 ni un 500.
+
+En `/b/[slug]/cancelar/[token]` se repite la validación en servidor antes de escribir:
+
+4. **Ventana.** `cancellationDeadline(startsAt, cancellationWindowMinutes)` es la misma función que usa la confirmación para mostrar u ocultar el enlace. Fuera de ventana no se renderiza el formulario y el `POST` devuelve un error recuperable.
+5. **Escritura atómica e idempotente.** Un `updateMany` con filtro `{ id, businessId, status: in [PENDING, CONFIRMED] }` solo actualiza una vez. El evento `CANCELLED` se guarda con `actorType: CUSTOMER`, `fromStatus`, `toStatus`, nota y `metadata.channel = "public-link"`; dos peticiones simultáneas no duplican el evento.
+6. **Outbox.** La reserva escribe `CREATED` y una notificación `QUEUED` (`booking.confirmed` o `booking.requested`) en la misma transacción del `INSERT`. La cancelación baja las notificaciones `QUEUED` previas del turno y encola `booking.cancelled`. El destinatario es el email del cliente y, si no hay, el teléfono normalizado por SMS.
+7. **Sin proveedor real.** `Notification` persiste la intención: no hay envío de email, SMS ni WhatsApp cableado en este alcance. Un worker futuro puede consumir la cola sin tocar el flujo de reserva.
+
+La Etapa 4 queda así cerrada junto con las Etapas 0, 1, 2, 3 y 5.
 
 ## Convención de commits
 
