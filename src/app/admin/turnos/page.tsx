@@ -31,6 +31,7 @@ import {
 import { cn } from "@/lib/utils";
 
 import { changeAppointmentStatusAction } from "./actions";
+import { WeekAgenda } from "./week-agenda";
 
 export const metadata: Metadata = {
   title: "Agenda",
@@ -53,7 +54,12 @@ const errorMessages: Record<string, string> = {
 export default async function AdminAgendaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ fecha?: string; error?: string; ok?: string }>;
+  searchParams: Promise<{
+    vista?: string;
+    fecha?: string;
+    error?: string;
+    ok?: string;
+  }>;
 }) {
   const { membership } = await getBusinessContext();
 
@@ -61,10 +67,11 @@ export default async function AdminAgendaPage({
   if (!membership) return null;
 
   const { business } = membership;
-  const { fecha, error, ok } = await searchParams;
+  const { vista, fecha, error, ok } = await searchParams;
 
   const currentKey = todayKey(business.timezone);
   const dateKey = fecha && isValidDateKey(fecha) ? fecha : currentKey;
+  const view = vista === "semana" ? "semana" : "dia";
   const { start, end } = dayBounds(dateKey, business.timezone);
 
   const [appointments, holiday, schedule] = await Promise.all([
@@ -89,60 +96,10 @@ export default async function AdminAgendaPage({
 
   return (
     <div>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-[11px] font-medium tracking-[0.2em] text-ink-muted uppercase">
-            Agenda{dateKey === currentKey ? " · Hoy" : null}
-          </p>
-          <h1 className="mt-2 font-display text-3xl leading-tight font-semibold tracking-[var(--theme-tracking-display)]">
-            {formatLongDate(dateKey, business.timezone)}
-          </h1>
-          <p className="mt-2 text-sm text-ink-muted">
-            {isClosed ? "Cerrado" : `Atiende ${scheduleLabel}`}
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <Link
-            href="/admin/turnos/nuevo"
-            className={buttonVariants({ size: "sm" })}
-          >
-            Nuevo turno
-          </Link>
-
-          <nav aria-label="Cambiar de día" className="flex items-center gap-2">
-            <Link
-              href={`/admin/turnos?fecha=${shiftDateKey(dateKey, -1)}`}
-              aria-label="Día anterior"
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "px-2.5")}
-            >
-              <ChevronLeft className="size-4" />
-            </Link>
-
-            {dateKey !== currentKey ? (
-              <Link
-                href="/admin/turnos"
-                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-              >
-                Hoy
-              </Link>
-            ) : null}
-
-            <Link
-              href={`/admin/turnos?fecha=${shiftDateKey(dateKey, 1)}`}
-              aria-label="Día siguiente"
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "px-2.5")}
-            >
-              <ChevronRight className="size-4" />
-            </Link>
-          </nav>
-        </div>
-      </div>
-
       {error ? (
         <p
           role="alert"
-          className="mt-6 rounded-md border border-danger/30 bg-danger/5 px-3 py-2 text-[13px] text-danger"
+          className="mb-6 rounded-md border border-danger/30 bg-danger/5 px-3 py-2 text-[13px] text-danger"
         >
           {errorMessages[error] ?? "No se pudo completar la acción."}
         </p>
@@ -151,13 +108,92 @@ export default async function AdminAgendaPage({
       {ok ? (
         <p
           role="status"
-          className="mt-6 rounded-md border border-success/30 bg-success/5 px-3 py-2 text-[13px] text-success"
+          className="mb-6 rounded-md border border-success/30 bg-success/5 px-3 py-2 text-[13px] text-success"
         >
           Turno {ok} correctamente.
         </p>
       ) : null}
 
-      <section aria-label="Resumen del día" className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {view === "semana" ? (
+        <WeekAgenda
+          business={business}
+          referenceKey={dateKey}
+          currentKey={currentKey}
+        />
+      ) : (
+        <>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-medium tracking-[0.2em] text-ink-muted uppercase">
+                Agenda{dateKey === currentKey ? " · Hoy" : null}
+              </p>
+              <h1 className="mt-2 font-display text-3xl leading-tight font-semibold tracking-[var(--theme-tracking-display)]">
+                {formatLongDate(dateKey, business.timezone)}
+              </h1>
+              <p className="mt-2 text-sm text-ink-muted">
+                {isClosed ? "Cerrado" : `Atiende ${scheduleLabel}`}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div
+                className="inline-flex h-9 items-center rounded-md border border-line bg-surface-2 p-0.5 text-[12px]"
+                role="group"
+                aria-label="Vista de la agenda"
+              >
+                <Link
+                  href={`/admin/turnos?vista=dia&fecha=${dateKey}`}
+                  aria-current="page"
+                  className="rounded bg-surface px-2.5 py-1 font-medium text-ink shadow-sm"
+                >
+                  Día
+                </Link>
+                <Link
+                  href={`/admin/turnos?vista=semana&fecha=${dateKey}`}
+                  aria-current={undefined}
+                  className="rounded px-2.5 py-1 text-ink-muted hover:text-ink"
+                >
+                  Semana
+                </Link>
+              </div>
+
+              <Link
+                href="/admin/turnos/nuevo"
+                className={buttonVariants({ size: "sm" })}
+              >
+                Nuevo turno
+              </Link>
+
+              <nav aria-label="Cambiar de día" className="flex items-center gap-2">
+                <Link
+                  href={`/admin/turnos?vista=dia&fecha=${shiftDateKey(dateKey, -1)}`}
+                  aria-label="Día anterior"
+                  className={cn(buttonVariants({ variant: "outline", size: "sm" }), "px-2.5")}
+                >
+                  <ChevronLeft className="size-4" />
+                </Link>
+
+                {dateKey !== currentKey ? (
+                  <Link
+                    href="/admin/turnos?vista=dia"
+                    className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                  >
+                    Hoy
+                  </Link>
+                ) : null}
+
+                <Link
+                  href={`/admin/turnos?vista=dia&fecha=${shiftDateKey(dateKey, 1)}`}
+                  aria-label="Día siguiente"
+                  className={cn(buttonVariants({ variant: "outline", size: "sm" }), "px-2.5")}
+                >
+                  <ChevronRight className="size-4" />
+                </Link>
+              </nav>
+            </div>
+          </div>
+
+          <section aria-label="Resumen del día" className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
           { label: "Turnos", value: String(active.length), hint: "Sin cancelados" },
           { label: "Confirmados", value: String(confirmed), hint: "Asistencia prevista" },
@@ -324,9 +360,11 @@ export default async function AdminAgendaPage({
                 </li>
               );
             })}
-          </ol>
-        )}
-      </section>
+            </ol>
+          )}
+          </section>
+        </>
+      )}
     </div>
   );
 }

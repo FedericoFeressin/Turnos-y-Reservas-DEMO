@@ -132,6 +132,13 @@ export function formatShortDay(date: Date, timezone: string): string {
   return formatInTimeZone(date, timezone, "d MMM", { locale: es });
 }
 
+/** Día abreviado de una clave de fecha en la zona del negocio: `Lun`, `Mar`… */
+export function formatWeekdayShort(dateKey: string, timezone: string): string {
+  const noon = fromZonedTime(`${dateKey}T12:00:00`, timezone);
+  const label = formatInTimeZone(noon, timezone, "EEE", { locale: es });
+  return label.charAt(0).toUpperCase() + label.slice(1).replace(/\.$/, "");
+}
+
 /** Clave de fecha de un instante en la zona del negocio. */
 export function dateKeyInZone(date: Date, timezone: string): string {
   return formatInTimeZone(date, timezone, "yyyy-MM-dd");

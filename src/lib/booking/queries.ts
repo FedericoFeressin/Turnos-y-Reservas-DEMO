@@ -1,5 +1,6 @@
 import { AppointmentStatus } from "@/generated/prisma/enums";
 
+import { dateKeyToUtcDate } from "@/lib/date";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -53,6 +54,28 @@ export async function getHoliday(businessId: string, date: Date) {
   return prisma.holiday.findUnique({
     where: { businessId_date: { businessId, date } },
     select: { name: true, isClosed: true },
+  });
+}
+
+/**
+ * Feriados de un rango de claves de fecha (`yyyy-MM-dd`). Se usa en la vista
+ * semana para marcar los días cerrados sin hacer siete consultas.
+ */
+export async function getHolidaysInRange(
+  businessId: string,
+  fromKey: string,
+  toKey: string,
+) {
+  return prisma.holiday.findMany({
+    where: {
+      businessId,
+      date: {
+        gte: dateKeyToUtcDate(fromKey),
+        lt: dateKeyToUtcDate(toKey),
+      },
+    },
+    select: { date: true, name: true, isClosed: true },
+    orderBy: { date: "asc" },
   });
 }
 
