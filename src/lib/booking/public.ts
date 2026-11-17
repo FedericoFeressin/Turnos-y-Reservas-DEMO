@@ -42,6 +42,7 @@ export const getPublicBusiness = cache(async (slug: string) => {
           slotGranularityMinutes: true,
           minAdvanceMinutes: true,
           maxAdvanceDays: true,
+          cancellationWindowMinutes: true,
           allowGuestBooking: true,
           allowChooseAnyStaff: true,
           showStaffSelection: true,
@@ -222,12 +223,26 @@ export async function getPublicAppointment(businessId: string, id: string) {
       currency: true,
       durationMinutes: true,
       customerNotes: true,
+      cancelledAt: true,
+      cancellationReason: true,
+      events: {
+        select: {
+          id: true,
+          type: true,
+          actorType: true,
+          fromStatus: true,
+          toStatus: true,
+          note: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: "asc" },
+      },
       service: { select: { name: true } },
       employee: {
         select: { displayName: true, firstName: true, lastName: true },
       },
       customer: {
-        select: { firstName: true, lastName: true, phone: true },
+        select: { firstName: true, lastName: true, phone: true, email: true },
       },
       business: {
         select: {
@@ -236,6 +251,7 @@ export async function getPublicAppointment(businessId: string, id: string) {
           settings: {
             select: {
               requireManualConfirmation: true,
+              cancellationWindowMinutes: true,
               cancellationPolicyText: true,
             },
           },
