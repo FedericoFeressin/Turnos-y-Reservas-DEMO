@@ -1,7 +1,7 @@
 # Booking System — Documentación
 
 Plantilla comercializable de gestión de turnos y reservas.
-Estado actual: **Etapas 0, 1, 2 y 3 completas** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña), un **panel con la agenda real**, el **CRUD de servicios, equipo y clientes**, **horarios y ausencias** y la **configuración del negocio**. La **Etapa 4 está en curso**: ya funciona el flujo público de reserva en `/b/[slug]`, sin cuentas de cliente; faltan la cancelación por token, el historial y el outbox. La **Etapa 5 también está en curso**: `/admin` ya es el panel con KPIs semanales y próximos turnos, y `/admin/turnos` permite confirmar, cancelar, completar y marcar como ausentes los turnos; siguen el alta manual y la vista semana.
+Estado actual: **Etapas 0, 1, 2 y 3 completas** con PostgreSQL 18.7, Prisma 7, el modelo de dominio migrado, un seed funcional, **autenticación operativa** (Better Auth con email y contraseña), un **panel con la agenda real**, el **CRUD de servicios, equipo y clientes**, **horarios y ausencias** y la **configuración del negocio**. La **Etapa 4 está en curso**: ya funciona el flujo público de reserva en `/b/[slug]`, sin cuentas de cliente; faltan la cancelación por token, el historial y el outbox. La **Etapa 5 también está en curso**: `/admin` ya es el panel con KPIs semanales y próximos turnos, `/admin/turnos` permite confirmar, cancelar, completar y marcar como ausentes los turnos, y `/admin/turnos/nuevo` carga turnos manualmente reutilizando la disponibilidad real; sigue la vista semana.
 
 Laboratorio visual: `pnpm dev` → <http://localhost:3000/lab>
 Panel protegido: `pnpm dev` → <http://localhost:3000/admin> (redirige a `/ingresar`)
@@ -28,6 +28,7 @@ Reserva pública: `pnpm dev` → <http://localhost:3000/b/estudio-norte>
 | Zona horaria | ✅ la sesión de PostgreSQL se fija en UTC; un turno elegido a las 12:00 local se guarda como 15:00Z y vuelve a leerse a las 12:00 |
 | Acciones de turno | ✅ confirmar/cancelar/completar/marcar ausente con transiciones válidas, permisos por rol y evento en `AppointmentEvent` |
 | Dashboard | ✅ KPIs de la semana, próximos turnos y carga por profesional, con navegación semanal |
+| Alta manual | ✅ turnos desde el panel con disponibilidad real, cliente existente o nuevo, origen y evento `CREATED` |
 | Contraste AA por tokens | ✅ 14 pares × 5 conceptos sin fallas |
 | Node | 24.22.3 (instalado en `~/.local/opt/node`) |
 | pnpm | 12.21.0 |
@@ -220,6 +221,7 @@ Solo para desarrollo local. En producción se cambia al aprovisionar la instanci
 |---|---|
 | `/admin` | Panel: resumen de la semana y próximos turnos |
 | `/admin/turnos` | Agenda del día con acciones de estado |
+| `/admin/turnos/nuevo` | Alta manual de turnos |
 
 | Pieza | Archivo |
 |---|---|
@@ -228,6 +230,8 @@ Solo para desarrollo local. En producción se cambia al aprovisionar la instanci
 | Dashboard | `src/app/admin/page.tsx` |
 | Agenda del día y botones de acción | `src/app/admin/turnos/page.tsx` |
 | Server Action de cambio de estado | `src/app/admin/turnos/actions.ts` |
+| Alta manual (pantalla, form y action) | `src/app/admin/turnos/nuevo/` |
+| Esquemas y ajustes de alta manual | `src/lib/admin/manual-booking.ts` |
 | Transiciones y esquemas de turno | `src/lib/admin/appointments.ts` |
 | Contexto de sesión y membresía | `src/lib/business.ts` |
 | Guardas de escritura | `src/lib/admin/guard.ts` |
@@ -277,7 +281,20 @@ Reglas:
 5. **Timestamps.** Confirmar completa `confirmedAt`, cancelar completa `cancelledAt` y completar completa `completedAt`. El evento y el turno se escriben en la misma transacción.
 6. **Feedback.** El action revalida `/admin` y `/admin/turnos`, y redirige con `ok=<accion>` o un código de error; la agenda muestra un banner accesible (`role="status"` / `role="alert"`).
 
-Sigue pendiente en el panel: alta manual de turnos y vista semana. La reserva pública ya escribe en la misma tabla.
+### Alta manual
+
+En `/admin/turnos/nuevo` se eligen servicio, profesional y fecha con un formulario `GET`; la misma pantalla muestra los horarios libres calculados con `getAvailabilitySource` y `slotsForDate`, agrupados en Mañana y Tarde.
+
+Reglas:
+
+1. **Misma disponibilidad que la web pública.** Horario general, franjas propias del profesional, ausencias, feriados y rangos ocupados se calculan con `src/lib/booking/availability.ts`. La única diferencia es `minAdvanceMinutes: 0`: el personal puede agendar para hoy mismo.
+2. **Sin \"cualquiera\".** El alta exige un profesional concreto y que esté asignado al servicio elegido; se valida otra vez en el `POST`.
+3. **Cliente existente o nuevo.** Con un cliente existente se reutiliza su ficha; con uno nuevo se busca por teléfono normalizado y se actualiza si ya existía. Los bloqueados se rechazan.
+4. **Origen y trazabilidad.** Se registra `ADMIN`, `PHONE`, `WHATSAPP` o `WALK_IN`. El turno nace `CONFIRMED` con `confirmedAt`, y se escribe un evento `CREATED` con `actorType: STAFF`.
+5. **Idempotencia y concurrencia.** El formulario genera un `clientRequestId`; un doble submit devuelve el mismo turno. Si otra reserva ocupa el horario entre el `GET` y el `POST`, la exclusión SQL se traduce en un error recuperable.
+6. **Snapshots.** Se guardan precio, duración, buffer y moneda del servicio al momento del alta.
+
+Sigue pendiente en el panel: la vista semana. La reserva pública ya escribe en la misma tabla.
 
 ## Catálogo: servicios y equipo
 
